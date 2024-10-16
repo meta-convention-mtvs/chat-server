@@ -8,13 +8,13 @@
 <body>
     <h1>WebSocket Chat</h1>
     <form action="" onsubmit="sendMessage(event)">
-        <input type="text" id="messageText" autocomplete="off" />
+        <input type="text" id="messageText" autocomplete="off" value='{"type":"test"}' />
         <button>Send</button>
     </form>
     <ul id='messages'>
     </ul>
     <script>
-        var ws = new WebSocket("ws://" + location.host);
+        var ws = new WebSocket("ws://" + location.host + "/ws");
         ws.onmessage = function (event) {
             var messages = document.getElementById('messages')
             var message = document.createElement('li')
@@ -24,7 +24,11 @@
         };
         function sendMessage(event) {
             var input = document.getElementById("messageText")
-            ws.send(input.value)
+            console.log(input.value)
+            ws.send(JSON.stringify({
+                type: "config.update",
+                org: input.value,
+            }))
             input.value = ''
             event.preventDefault()
         }
