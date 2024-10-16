@@ -2,13 +2,23 @@
 <html>
 
 <head>
-    <title>Chat</title>
+    <title>Realtime AI Chat</title>
 </head>
 
 <body>
-    <h1>WebSocket Chat</h1>
+    <h1>Realtime AI Chat</h1>
     <form action="" onsubmit="sendMessage(event)">
-        <input type="text" id="messageText" autocomplete="off" value='{"type":"test"}' />
+        <select name="request" id="request">
+            <option value="config.update">config.update</option>
+            <option value="buffer.add_audio">buffer.add_audio</option>
+            <option value="buffer.clear_audio">buffer.clear_audio</option>
+            <option value="generate.text_audio">generate.text_audio</option>
+            <option value="generate.only_text">generate.only_text</option>
+            <option value="generate.cancel">generate.cancel</option>
+        </select>
+        <div>
+            <textarea type="text" id="messageText" autocomplete="off">{"org": "abcd"}</textarea>
+        </div>
         <button>Send</button>
     </form>
     <ul id='messages'>
@@ -18,17 +28,28 @@
         ws.onmessage = function (event) {
             var messages = document.getElementById('messages')
             var message = document.createElement('li')
-            var content = document.createTextNode(event.data)
+            var content = document.createTextNode("receive: " + receive)
             message.appendChild(content)
             messages.appendChild(message)
         };
         function sendMessage(event) {
             var input = document.getElementById("messageText")
-            console.log(input.value)
-            ws.send(JSON.stringify({
-                type: "config.update",
-                org: input.value,
-            }))
+            try {
+                data = JSON.parse(input.value)
+            } catch {
+                alert("json 형식");
+                return;
+            }
+            type = { "type": document.querySelector("#request").value }
+            payload = { ...type, ...data }
+            ws.send(JSON.stringify(payload))
+
+            var messages = document.getElementById('messages')
+            var message = document.createElement('li')
+            var content = document.createTextNode("send: " + JSON.stringify(payload))
+            message.appendChild(content)
+            messages.appendChild(message)
+
             input.value = ''
             event.preventDefault()
         }
