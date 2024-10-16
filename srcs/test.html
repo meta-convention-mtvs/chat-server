@@ -24,11 +24,11 @@
     <ul id='messages'>
     </ul>
     <script>
-        var ws = new WebSocket("ws://" + location.host + "/ws");
+        var ws = new WebSocket("ws://" + location.host);
         ws.onmessage = function (event) {
             var messages = document.getElementById('messages')
             var message = document.createElement('li')
-            var content = document.createTextNode("receive: " + receive)
+            var content = document.createTextNode("receive: " + event.data)
             message.appendChild(content)
             messages.appendChild(message)
         };

@@ -11,7 +11,7 @@ ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 
 app = FastAPI()
 
-@app.websocket("/ws")
+@app.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     llm = None
