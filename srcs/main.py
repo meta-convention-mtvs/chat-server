@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 import uvicorn
 import json
-from RealtimeAPI import LLMConsole
+from .RealtimeAPI import LLMConsole
 
 ERROR_FATAL = {"type": "server.error", "code": 1}
 ERROR_NO_ORG = {"type": "server.error", "code": 2}
