@@ -25,36 +25,39 @@ class LLMConsole:
         self.status = LLMConsole.STATUS_RUN
         await asyncio.sleep(0.016)
         async def send_text(text):
-            if self.status == LLMConsole.STATUS_RUN and "text" in self.generate_type:
-                await self.ws.send_json({ "type": "generated.text.delta", "delta": text })
-                await asyncio.sleep(0.016)
+            if self.status != LLMConsole.STATUS_RUN or "text" not in self.generate_type:
+                return
+            await self.ws.send_json({ "type": "generated.text.delta", "delta": text })
+            await asyncio.sleep(0.016)
         async def send_audio(file_name):
+            if self.status != LLMConsole.STATUS_RUN or "audio" not in self.generate_type:
+                return
             with open(file_name) as file:
                 content = file.read()
             await self.ws.send_json({ "type": "generated.audio.delta", "delta": content })
             await asyncio.sleep(0.016)
-        send_text("메타")
-        send_text(" 컨벤션")
-        send_audio("srcs/sample/pcm_file_0.txt")
-        send_audio("srcs/sample/pcm_file_1.txt")
-        send_audio("srcs/sample/pcm_file_2.txt")
-        send_text("에")
-        send_text(" 오신")
-        send_text(" 것")
-        send_audio("srcs/sample/pcm_file_3.txt")
-        send_audio("srcs/sample/pcm_file_4.txt")
-        send_audio("srcs/sample/pcm_file_5.txt")
-        send_text("을")
-        send_text(" 환영")
-        send_text("합니다")
-        send_text(".")
+        await send_text("메타")
+        await send_text(" 컨벤션")
+        await send_audio("srcs/sample/pcm_file_0.txt")
+        await send_audio("srcs/sample/pcm_file_1.txt")
+        await send_audio("srcs/sample/pcm_file_2.txt")
+        await send_text("에")
+        await send_text(" 오신")
+        await send_text(" 것")
+        await send_audio("srcs/sample/pcm_file_3.txt")
+        await send_audio("srcs/sample/pcm_file_4.txt")
+        await send_audio("srcs/sample/pcm_file_5.txt")
+        await send_text("을")
+        await send_text(" 환영")
+        await send_text("합니다")
+        await send_text(".")
         if self.status == LLMConsole.STATUS_RUN and "text" in self.generate_type:
             await self.ws.send_json({ "type": "generated.text.done" })
             await asyncio.sleep(0.016)
-        send_audio("srcs/sample/pcm_file_6.txt")
-        send_audio("srcs/sample/pcm_file_7.txt")
-        send_audio("srcs/sample/pcm_file_8.txt")
-        send_audio("srcs/sample/pcm_file_9.txt")
+        await send_audio("srcs/sample/pcm_file_6.txt")
+        await send_audio("srcs/sample/pcm_file_7.txt")
+        await send_audio("srcs/sample/pcm_file_8.txt")
+        await send_audio("srcs/sample/pcm_file_9.txt")
         if self.status == LLMConsole.STATUS_RUN and "audio" in self.generate_type:
             await self.ws.send_json({ "type": "generated.audio.done" })
             await asyncio.sleep(0.016)
