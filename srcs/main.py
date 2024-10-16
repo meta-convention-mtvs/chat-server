@@ -20,29 +20,20 @@ async def websocket_endpoint(websocket: WebSocket):
         if message["type"] == "config.update":
             org_id = message.get("org")
             if not org_id:
-                await websocket.send_json({
-                    "type": "server.error",
-                    "code": ERROR_REQ_PARAM,
-                })
+                await websocket.send_json(ERROR_REQ_PARAM)
             else:
                 llm = LLMConsole(websocket, org_id)
 
         elif message["type"] == "buffer.add_audio":
             audio_data = message.get("audio")
             if not llm:
-                await websocket.send_json({
-                    "type": "server.error",
-                    "code": ERROR_NO_ORG,
-                })
+                await websocket.send_json(ERROR_NO_ORG)
             else:
                 await llm.add_audio(audio_data)
 
         elif message["type"] == "buffer.clear_audio":
             if not llm:
-                await websocket.send_json({
-                    "type": "server.error",
-                    "code": ERROR_NO_ORG
-                })
+                await websocket.send_json(ERROR_NO_ORG)
             else:
                 await llm.clear_audio()
 
