@@ -14,8 +14,8 @@ class LLMConsole:
         self.ws = ws
         self.org = org
         self.status = LLMConsole.STATUS_WAIT
+        self.use_audio = False
         self.modalities = None
-        self.log("created")
     
     async def load(self):
         url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"
@@ -24,20 +24,31 @@ class LLMConsole:
             "OpenAI-Beta": "realtime=v1",
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
-        self.log("connected")
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
     
     async def add_audio(self, buffer):
-        self.ai.send
-        pass
+        if not buffer:
+            return
+        self.use_audio = True
+        await self.ai.send(json.dumps({
+            "type": "input_audio_buffer.append",
+            "audio": buffer
+        }))
     
     async def clear_audio(self):
-        pass
+        self.use_audio = False
+        await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
     async def add_text(self, text):
-        # TODO
-        pass
+        await self.ai.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [{ "type": "input_text", "text": text }]
+            }
+        }))
     
     async def generate(self, modalities=["text", "audio"]):
         if self.status != LLMConsole.STATUS_WAIT:
@@ -45,6 +56,9 @@ class LLMConsole:
             return
         self.modalities = modalities
         self.status = LLMConsole.STATUS_RUN
+        if self.use_audio:
+            self.use_audio = False
+            await self.ai.send(json.dumps({ "type": "input_audio_buffer.commit" }))
         await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": modalities} }))
 
     async def cancel(self):
@@ -79,48 +93,46 @@ class LLMConsole:
                 print("error:", data.get("error"), flush=True)
             else:
                 print("ect:", data, flush=True)
-                
-                
-        self.log("test")
-        await asyncio.sleep(0.016)
-        async def send_text(text, time=0.016):
-            if self.status != LLMConsole.STATUS_RUN or "text" not in self.generate_type:
-                return
-            await self.ws.send_json({ "type": "generated.text.delta", "delta": text })
-            await asyncio.sleep(time)
-        async def send_audio(file_name, time=0.016):
-            if self.status != LLMConsole.STATUS_RUN or "audio" not in self.generate_type:
-                return
-            with open(file_name) as file:
-                content = file.read()
-            await self.ws.send_json({ "type": "generated.audio.delta", "delta": content })
-            await asyncio.sleep(time)
-        await send_text("메타")
-        await send_text(" 컨벤션")
-        await send_audio("srcs/sample/pcm_file_0.txt")
-        await send_audio("srcs/sample/pcm_file_1.txt")
-        await send_audio("srcs/sample/pcm_file_2.txt")
-        await send_text("에")
-        await send_text(" 오신")
-        await send_text(" 것")
-        await send_audio("srcs/sample/pcm_file_3.txt")
-        await send_audio("srcs/sample/pcm_file_4.txt")
-        await send_audio("srcs/sample/pcm_file_5.txt")
-        await send_text("을", time=0.5)
-        await send_text(" 환영")
-        await send_text("합니다")
-        await send_text(".")
-        if self.status == LLMConsole.STATUS_RUN and "text" in self.modalities:
-            await self.ws.send_json({ "type": "generated.text.done" })
-            await asyncio.sleep(0.016)
-        await send_audio("srcs/sample/pcm_file_6.txt")
-        await send_audio("srcs/sample/pcm_file_7.txt")
-        await send_audio("srcs/sample/pcm_file_8.txt", time=1)
-        await send_audio("srcs/sample/pcm_file_9.txt")
-        if self.status == LLMConsole.STATUS_RUN and "audio" in self.modalities:
-            await self.ws.send_json({ "type": "generated.audio.done" })
-            await asyncio.sleep(0.016)
-        self.status = LLMConsole.STATUS_WAIT
+
+    async def send_text(self, text, time=0.016):
+        if self.status != LLMConsole.STATUS_RUN or "text" not in self.generate_type:
+            return
+        await self.ws.send_json({ "type": "generated.text.delta", "delta": text })
+        await asyncio.sleep(time)
+    async def send_audio(self, file_name, time=0.016):
+        if self.status != LLMConsole.STATUS_RUN or "audio" not in self.generate_type:
+            return
+        with open(file_name) as file:
+            content = file.read()
+        await self.ws.send_json({ "type": "generated.audio.delta", "delta": content })
+        await asyncio.sleep(time)
+    # await asyncio.sleep(0.016)
+    # await send_text("메타")
+    # await send_text(" 컨벤션")
+    # await send_audio("srcs/sample/pcm_file_0.txt")
+    # await send_audio("srcs/sample/pcm_file_1.txt")
+    # await send_audio("srcs/sample/pcm_file_2.txt")
+    # await send_text("에")
+    # await send_text(" 오신")
+    # await send_text(" 것")
+    # await send_audio("srcs/sample/pcm_file_3.txt")
+    # await send_audio("srcs/sample/pcm_file_4.txt")
+    # await send_audio("srcs/sample/pcm_file_5.txt")
+    # await send_text("을", time=0.5)
+    # await send_text(" 환영")
+    # await send_text("합니다")
+    # await send_text(".")
+    # if self.status == LLMConsole.STATUS_RUN and "text" in self.modalities:
+    #     await self.ws.send_json({ "type": "generated.text.done" })
+    #     await asyncio.sleep(0.016)
+    # await send_audio("srcs/sample/pcm_file_6.txt")
+    # await send_audio("srcs/sample/pcm_file_7.txt")
+    # await send_audio("srcs/sample/pcm_file_8.txt", time=1)
+    # await send_audio("srcs/sample/pcm_file_9.txt")
+    # if self.status == LLMConsole.STATUS_RUN and "audio" in self.modalities:
+    #     await self.ws.send_json({ "type": "generated.audio.done" })
+    #     await asyncio.sleep(0.016)
+    # self.status = LLMConsole.STATUS_WAIT
 
     def log(self, s):
         with open("srcs/conn.log", "+a") as file:
