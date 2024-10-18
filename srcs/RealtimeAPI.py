@@ -5,6 +5,12 @@ import json
 import os
 
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
+INSTRUCTION = "당신은 전시장의 한 기업을 소개하는 AI입니다. 정보를 바탕으로 기업과 기업의 아이템을 소개해야하며 주어진 정보를 바탕으로 도움을 주어야 합니다. 회사와 상품을 소개하는 자리이므로 긍정적인 답변만 해주세요."
+SAMPLE_INFO = """
+회사 이름: 메타버스아카데미
+회사 소개: 메타버스아카데미는 융합적 사고, 인문학적 사고, 협업능력, 창의적 사고, 도전정신의 인재상을 기르는 메타버스 교육기관입니다.
+아이템: AI, XR, TA, 기획, 백엔드 기술을 가르치고 미래 인재상에 걸맞는 인재를 양성하는 프로젝트를 가지고 있습니다.
+"""
 
 class LLMConsole:
     STATUS_WAIT = 0
@@ -24,6 +30,15 @@ class LLMConsole:
             "OpenAI-Beta": "realtime=v1",
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
+        await self.ai.send(json.dumps({ "session": { "instructions": INSTRUCTION }}))
+        await self.ai.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "system",
+                "content": [{ "type": "input_text", "text": SAMPLE_INFO }]
+            }
+        }))
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
     
