@@ -42,13 +42,19 @@ async def websocket_endpoint(websocket: WebSocket):
                 await llm.clear_audio()
 
         elif message["type"] == "generate.text_audio":
-            text = message.get("text", "")
+            if not llm.is_gen_ready():
+                await llm.response_error(ERROR_DUP_REQ)
+                return
+            text = message.get("text", None)
             if text:
                 await llm.add_text(text)
             await llm.generate(["text", "audio"])
 
         elif message["type"] == "generate.only_text":
-            text = message.get("text", "")
+            if not llm.is_gen_ready():
+                await llm.response_error(ERROR_DUP_REQ)
+                return
+            text = message.get("text", None)
             if text:
                 await llm.add_text(text)
             await llm.generate(["text"])

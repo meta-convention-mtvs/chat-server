@@ -65,9 +65,15 @@ class LLMConsole:
             }
         }))
     
+    def is_gen_ready(self):
+        return self.status == LLMConsole.STATUS_WAIT
+
+    async def response_error(self, code):
+        await self.ws.send_json({"type": "server.error", "code": code}) # dup
+        
+    
     async def generate(self, modalities=["text", "audio"]):
-        if self.status != LLMConsole.STATUS_WAIT:
-            await self.ws.send_json({"type": "server.error", "code": 3}) # dup
+        if not self.is_gen_ready():
             return
         self.modalities = modalities
         self.status = LLMConsole.STATUS_RUN
@@ -77,7 +83,7 @@ class LLMConsole:
         await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": modalities} }))
 
     async def cancel(self):
-        if self.status == LLMConsole.STATUS_WAIT:
+        if self.is_gen_ready():
             return
         self.status = LLMConsole.STATUS_WAIT
         if "text" in self.modalities:
