@@ -50,7 +50,13 @@
             message.appendChild(content)
             messages.appendChild(message)
 
-            input.value = '{}'
+            if (payload.type == "config.update") {
+                document.querySelector("#request").value = "generate.text_audio";
+                input.value = '{"text": "메타버스아카데미에 대해 소개해줘"}';
+            }
+            else {
+                input.value = '{}';
+            }
             event.preventDefault()
         }
     </script>
