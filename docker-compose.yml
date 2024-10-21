@@ -1,6 +1,7 @@
 services:
   chat:
     build: .
+    restart: always
     env_file: .env
     volumes:
       - ./srcs:/app/srcs
