@@ -30,15 +30,8 @@ class LLMConsole:
             "OpenAI-Beta": "realtime=v1",
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
-        await self.ai.send(json.dumps({ "session": { "instructions": INSTRUCTION }}))
-        # await self.ai.send(json.dumps({
-        #     "type": "conversation.item.create",
-        #     "item": {
-        #         "type": "message",
-        #         "role": "system",
-        #         "content": [{ "type": "input_text", "text": SAMPLE_INFO }]
-        #     }
-        # }))
+        await self.ai.send(json.dumps({ "type": "session.update", "session": { "instructions": INSTRUCTION }}))
+        await self.add_text("system", SAMPLE_INFO, "text")
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
     
@@ -55,13 +48,14 @@ class LLMConsole:
         self.use_audio = False
         await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
-    async def add_text(self, text):
+    async def add_text(self, role, text, type="input_text"):
         await self.ai.send(json.dumps({
             "type": "conversation.item.create",
             "item": {
                 "type": "message",
-                "role": "user",
-                "content": [{ "type": "input_text", "text": text }]
+                "status": "completed",
+                "role": role,
+                "content": [{ "type": type, "text": text }]
             }
         }))
     
@@ -80,7 +74,7 @@ class LLMConsole:
         if self.use_audio:
             self.use_audio = False
             await self.ai.send(json.dumps({ "type": "input_audio_buffer.commit" }))
-        await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": modalities} }))
+        await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": self.modalities} }))
 
     async def cancel(self):
         if self.is_gen_ready():

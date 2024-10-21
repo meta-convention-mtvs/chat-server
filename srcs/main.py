@@ -47,7 +47,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 return
             text = message.get("text", None)
             if text:
-                await llm.add_text(text)
+                await llm.add_text("user", text)
             await llm.generate(["text", "audio"])
 
         elif message["type"] == "generate.only_text":
@@ -56,7 +56,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 return
             text = message.get("text", None)
             if text:
-                await llm.add_text(text)
+                await llm.add_text("user", text)
             await llm.generate(["text"])
 
         elif message["type"] == "generate.cancel":
