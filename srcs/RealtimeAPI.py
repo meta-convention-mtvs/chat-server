@@ -31,14 +31,14 @@ class LLMConsole:
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
         await self.ai.send(json.dumps({ "session": { "instructions": INSTRUCTION }}))
-        await self.ai.send(json.dumps({
-            "type": "conversation.item.create",
-            "item": {
-                "type": "message",
-                "role": "system",
-                "content": [{ "type": "input_text", "text": SAMPLE_INFO }]
-            }
-        }))
+        # await self.ai.send(json.dumps({
+        #     "type": "conversation.item.create",
+        #     "item": {
+        #         "type": "message",
+        #         "role": "system",
+        #         "content": [{ "type": "input_text", "text": SAMPLE_INFO }]
+        #     }
+        # }))
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
     
