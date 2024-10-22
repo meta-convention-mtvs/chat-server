@@ -30,10 +30,11 @@ class LLMConsole:
             "OpenAI-Beta": "realtime=v1",
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
-        await self.ai.send(json.dumps({ "type": "session.update", "session": { "instructions": INSTRUCTION }}))
-        await self.add_text("system", SAMPLE_INFO, "text")
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
+        await self.ai.send(json.dumps({ "type": "session.update", "session": { "instructions": INSTRUCTION }}))
+        await self.add_text("user", SAMPLE_INFO, "input_text")
+        # await self.add_text("system", SAMPLE_INFO, "input_text")
     
     async def add_audio(self, buffer):
         if not buffer:
