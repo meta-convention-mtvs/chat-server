@@ -26,7 +26,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json(ERROR_REQ_PARAM)
             else:
                 llm = LLMConsole(websocket, org_id)
-                await llm.load()
+                await llm.load(org_id)
 
         elif message["type"] == "buffer.add_audio":
             audio_data = message.get("audio")
