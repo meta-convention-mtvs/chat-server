@@ -105,10 +105,11 @@ class LLMConsole:
         if self.is_gen_ready():
             return
         self.status = LLMConsole.STATUS_WAIT
+        await self.ai.send(json.dumps({ "type": "response.cancel" }))
         if "text" in self.modalities:
-            self.ws.send_json({ "type": "generated.text.canceled" })
+            await self.ws.send_json({ "type": "generated.text.canceled" })
         if "audio" in self.modalities:
-            self.ws.send_json({ "type": "generated.audio.canceled" })
+            await self.ws.send_json({ "type": "generated.audio.canceled" })
 
     async def onmessage(self):
         while True:
