@@ -25,13 +25,15 @@
     </ul>
     <script>
         var ws = new WebSocket("ws://" + location.host);
-        ws.onmessage = function (event) {
+        function appendText(text) {
             var messages = document.getElementById('messages')
             var message = document.createElement('li')
-            var content = document.createTextNode("receive: " + event.data)
+            var content = document.createTextNode(text)
             message.appendChild(content)
-            messages.appendChild(message)
-        };
+            messages.prepend(message)
+        }
+
+        ws.onmessage = e => appendText("receive: " + e.data);
         function sendMessage(event) {
             var input = document.getElementById("messageText")
             try {
@@ -44,11 +46,7 @@
             payload = { ...type, ...data }
             ws.send(JSON.stringify(payload))
 
-            var messages = document.getElementById('messages')
-            var message = document.createElement('li')
-            var content = document.createTextNode("send: " + JSON.stringify(payload))
-            message.appendChild(content)
-            messages.appendChild(message)
+            appendText("send: " + JSON.stringify(payload))
 
             if (payload.type == "config.update") {
                 document.querySelector("#request").value = "generate.text_audio";
