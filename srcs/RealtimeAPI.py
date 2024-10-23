@@ -169,16 +169,16 @@ class LLMConsole:
         while True:
             raw = await self.ai.recv()
             data = json.loads(raw)
-            if data.get("type") == "response.audio_transcript.delta" or data.get("type") == "response.text.delta":
+            if self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio_transcript.delta" or data.get("type") == "response.text.delta"):
                 await self.ws.send_json({ "type": "generated.text.delta", "delta": data.get("delta") })
                 print("generated.text.delta:", data.get("delta"), flush=True)
-            elif data.get("type") == "response.audio_transcript.done" or data.get("type") == "response.text.done":
+            elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio_transcript.done" or data.get("type") == "response.text.done"):
                 await self.ws.send_json({ "type": "generated.text.done", "text": data.get("transcript", data.get("text")) })
                 print("generated.text.done:", data.get("transcript", data.get("text")), flush=True)
-            elif data.get("type") == "response.audio.delta":
+            elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio.delta"):
                 await self.ws.send_json({ "type": "generated.audio.delta", "delta": data.get("delta") })
                 print("generated.audio.delta:", str(len(data.get("delta"))), flush=True)
-            elif data.get("type") == "response.audio.done":
+            elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio.done"):
                 await self.ws.send_json({ "type": "generated.audio.done" })
                 print("generated.audio.done:", data.get("audio done!"), flush=True)
             elif data.get("type") == "response.done":
