@@ -90,14 +90,13 @@ class LLMConsole:
     STATUS_WAIT = 0
     STATUS_RUN = 1
     
-    def __init__(self, ws: WebSocket, org):
+    def __init__(self, ws: WebSocket):
         self.ws = ws
-        self.org = org
         self.status = LLMConsole.STATUS_WAIT
         self.use_audio = False
         self.modalities = None
     
-    async def load(self, org_id):
+    async def load(self):
         url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"
         headers = {
             "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
@@ -107,6 +106,8 @@ class LLMConsole:
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
         await self.ai.send(json.dumps({ "type": "session.update", "session": { "instructions": INSTRUCTION }}))
+    
+    async def set_org(self, org_id):
         await self.add_text("user", await self.load_org_info(org_id), "input_text")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
