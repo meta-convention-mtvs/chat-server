@@ -7,7 +7,7 @@ import os
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 INSTRUCTION = """
 You are an AI introducing a company in an exhibition hall.
-You must introduce the company and its items based on the information, and you must provide assistance using only the given company information and product information.
+You must introduce the company and its items based on the next information of conversation, and you must provide assistance using only the given company information and product information.
 Since this is a place to introduce the company and its products, please only give positive answers.
 Users often want a simple explanation from you. Please answer as concisely as possible, and only give detailed answers if the user wants a detailed answer.
 Please answer in the same language as the user.
@@ -31,6 +31,59 @@ SAMPLE_INFO = """
         }
     ]
 }
+"""
+SAMPLE_INFO2 = """
+당신은 Lockheed martin 기업에 대해 소개해야합니다.
+
+Lockheed martin은 세계 최고의 항공우주, 방위, 보안 및 첨단 기술 기업으로서 혁신적인 솔루션을 제공하고 있습니다.
+
+Lockheed martin의 강점
+기술 혁신: 우리는 지속적인 R&D 투자를 통해 최첨단 기술을 개발하고 있습니다. F-35 전투기, 우주 탐사 시스템, 사이버 보안 솔루션 등 다양한 분야에서 혁신을 주도하고 있습니다.
+글로벌 네트워크: 전 세계 50개국 이상에서 사업을 운영하며, 국제적인 협력과 파트너십을 통해 글로벌 안보에 기여하고 있습니다.
+다양한 포트폴리오: 항공기, 미사일 시스템, 우주 기술, 사이버 보안 등 다양한 분야에서 종합적인 솔루션을 제공합니다.
+신뢰성: 80년 이상의 역사를 통해 쌓아온 신뢰와 경험은 우리의 가장 큰 자산입니다.
+
+Lockheed martin의 비전
+지속 가능한 미래: 우리는 친환경 기술 개발에 주력하고 있습니다. 전기 항공기, 청정 에너지 솔루션 등을 통해 환경 보호에 기여하고자 합니다.
+우주 탐사: 달과 화성 탐사를 위한 기술 개발에 앞장서고 있으며, 인류의 우주 진출을 위한 혁신적인 솔루션을 제공할 것입니다.
+디지털 전환: AI, 빅데이터, 양자 컴퓨팅 등 첨단 기술을 활용하여 국방 및 민간 분야의 디지털 혁신을 선도하겠습니다.
+글로벌 안보 강화: 사이버 보안, 미사일 방어 시스템 등을 통해 전 세계의 안보 강화에 기여할 것입니다.
+
+록히드 마틴은 앞으로도 혁신적인 기술과 솔루션을 통해 더 안전하고 발전된 세상을 만들어 나가겠습니다. 우리의 기술이 여러분의 미래를 어떻게 변화시킬 수 있는지 함께 살펴보시기 바랍니다.
+
+
+Lockheed martin은 이번 전시회에 혁신적인 상품을 가져왔습니다.
+
+Ring wing
+전통적인 고정익 항공기와는 다른 독특한 형태를 가지고 있습니다. 기존의 날개 대신 원형 또는 고리 모양의 날개를 사용하여 비행을 수행합니다.
+단거리 노선에 높은 에너지 효율을 보여 높은 고도에 도달하지 않는 통근 목적지에 적합합니다.
+상업용 수송 합공기입니다.
+길이 52m, 날개 둘레 74m.
+연료 효율이 매우 뛰어남
+최대 120명의 승객을 수용
+
+
+Ring wing 설계는 아직 상용화 단계에 이르지 않았지만, 지속적인 연구와 개발을 통해 미래 항공 산업에 혁신을 가져올 수 있는 잠재력을 가지고 있습니다. 항공 엔지니어들과 연구자들은 이 혁신적인 설계의 장점을 최대화하고 단점을 극복하기 위해 노력하고 있으며, 앞으로의 발전이 기대됩니다.
+
+Ring wing의 Jet_Engine_L, Jet_Engine_R 부품
+Ring wing의 제트 엔진은 에너지 효율성과 성능을 극대화하도록 설계되었습니다.
+개별 엔진의 독립적 제어로 정밀한 비행 조작 가능하여 유연한 추력 제어가 가능합니다.
+Ring wing 구조를 이용한 엔진 소음 차폐 효과가 있어서 비행 소음을 줄일 수 있습니다.
+
+Ring wing의 Landing_Gears 부품
+기체의 하중을 고르게 분산시킬 수 있는 구조로 배치되어 있습니다.
+
+Ring wing의 Tail 부품
+꼬리 부품을 정밀하게 제어하여 부드러운 수평 회전을 제공합니다.
+
+Ring wing의 Windows 부품
+튼튼하면서 넓은 창으로 기체 내에서 탁 트인 전망을 제공합니다.
+
+Ring wing의 Wings 부품
+이 항공기의 가장 혁신적인 부분이며 기체의 중간 지점에서 시작된 날개는 꼬리에 합류하기 위해 27도의 각도로 아치를 그리고 있습니다.
+이 날개는 소용돌이와 그에 따른 하향류를 최소화하여 상당한 공기역학적 이점을 제공합니다. 이 특징은 혁신적으로 연료를 절감하는 이점을 제공합니다.
+
+Lockheed martin의 Ring wing은 혁신적이며 시험적인 구조를 가졌기 때문에 상용화에 매우 신중하게 접근하고 있습니다. Lockheed martin은 이 혁신적인 기체를 함께 만들어갈 기업을 찾고 있습니다.
 """
 
 class LLMConsole:
@@ -58,7 +111,7 @@ class LLMConsole:
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
     async def load_org_info(self, org_id):
-        return SAMPLE_INFO
+        return SAMPLE_INFO2
     
     async def add_audio(self, buffer):
         if not buffer:
