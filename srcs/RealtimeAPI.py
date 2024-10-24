@@ -130,7 +130,7 @@ class LLMConsole:
                 "input_audio_transcription": { "model": "whisper-1" }
             }
         }))
-        await self.add_text("user", await self.load_org_info(org_id), "input_text")
+        await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
     async def load_org_info(self, org_id):
@@ -149,7 +149,7 @@ class LLMConsole:
         self.use_audio = False
         await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
-    async def add_text(self, role, text, type="input_text"):
+    async def add_text(self, role, text, type="input_text", log_label="text"):
         await self.ai.send(json.dumps({
             "type": "conversation.item.create",
             "item": {
@@ -159,7 +159,10 @@ class LLMConsole:
                 "content": [{ "type": type, "text": text }]
             }
         }))
-        self.log(">> (text) " + text)
+        if log_label == "prompt":
+            self.log(f">>> ({log_label}) {text}")
+        else:
+            self.log(f">> ({log_label}) {text}")
     
     def is_gen_ready(self):
         return self.status == LLMConsole.STATUS_WAIT
