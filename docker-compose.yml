@@ -5,7 +5,18 @@ services:
     env_file: .env
     volumes:
       - ./srcs:/app/srcs
-      - ./conversation:/app/conversation
+      - ./conversation:/app/conversation:ro
     ports:
       - ${PORT}:3000
     command: ["uvicorn", "srcs.main:app", "--reload", "--host=0.0.0.0", "--port=3000"]
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    env_file: .env
+    volumes:
+      - ./nginx.config:/etc/nginx/conf.d/default.conf:ro
+      - ./conversation:/usr/share/nginx/html
+    ports:
+      - ${LOG_PORT}:80
+    command: ["nginx", "-g", "daemon off;"]
