@@ -187,6 +187,8 @@ class LLMConsole:
             elif data.get("type") == "error":
                 print("error:", data.get("error"), flush=True)
             else:
+                if "delta" in data:
+                    data["delta"] = str(len(data.get("delta")))
                 print("ect:", data, flush=True)
 
     async def send_text(self, text, time=0.016):
