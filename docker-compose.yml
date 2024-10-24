@@ -15,7 +15,7 @@ services:
     restart: always
     env_file: .env
     volumes:
-      - ./nginx.config:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./conversation:/usr/share/nginx/html
     ports:
       - ${LOG_PORT}:80
