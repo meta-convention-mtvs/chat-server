@@ -4,7 +4,8 @@ ERROR_DUP_REQ = {"type": "server.error", "code": 3}
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 
 async def command(llm, message):
-    
+    print(message["type"] + "\n", flush=True)
+    llm.log(message["type"])
     if message["type"] == "config.update":
         org_id = message.get("org")
         if not org_id:
