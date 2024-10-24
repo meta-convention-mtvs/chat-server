@@ -5,7 +5,7 @@ ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 
 async def command(llm, message):
     print(message["type"] + "\n", flush=True)
-    llm.log(message["type"])
+    llm.log("< " + message["type"])
     if message["type"] == "config.update":
         org_id = message.get("org")
         if not org_id:
@@ -46,3 +46,4 @@ async def command(llm, message):
 
     elif message["type"] == "generate.cancel":
         await llm.cancel()
+    llm.log("> complete " + message["type"])
