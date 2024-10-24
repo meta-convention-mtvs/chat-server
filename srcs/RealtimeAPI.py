@@ -1,8 +1,11 @@
 from fastapi import WebSocket
+from datetime import datetime
+from uuid import uuid4
 import websockets
 import asyncio
 import json
 import os
+import re
 
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 INSTRUCTION = """
@@ -86,6 +89,9 @@ Ring wing의 Wings 부품
 Lockheed martin의 Ring wing은 혁신적이며 시험적인 구조를 가졌기 때문에 상용화에 매우 신중하게 접근하고 있습니다. Lockheed martin은 이 혁신적인 기체를 함께 만들어갈 기업을 찾고 있습니다.
 """
 
+LOG_DIR = "conversation"
+os.makedirs(LOG_DIR, exist_ok=True)
+
 class LLMConsole:
     STATUS_WAIT = 0
     STATUS_RUN = 1
@@ -95,8 +101,11 @@ class LLMConsole:
         self.status = LLMConsole.STATUS_WAIT
         self.use_audio = False
         self.modalities = None
+        self.uuid = str(uuid4())
+        self.log_file = None
     
     async def load(self):
+        self.log_file = open(LOG_DIR + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid, "+w")
         url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"
         headers = {
             "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
@@ -105,7 +114,13 @@ class LLMConsole:
         self.ai = await websockets.connect(url, extra_headers=headers)
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
-        await self.ai.send(json.dumps({ "type": "session.update", "session": { "instructions": INSTRUCTION }}))
+        await self.ai.send(json.dumps({
+            "type": "session.update",
+            "session": { 
+                "instructions": INSTRUCTION,
+                "input_audio_transcription": { "model": "whisper-1" }
+            }
+        }))
     
     async def set_org(self, org_id):
         await self.add_text("user", await self.load_org_info(org_id), "input_text")
@@ -137,6 +152,7 @@ class LLMConsole:
                 "content": [{ "type": type, "text": text }]
             }
         }))
+        self.log(">> (text) " + text)
     
     def is_gen_ready(self):
         return self.status == LLMConsole.STATUS_WAIT
@@ -172,15 +188,22 @@ class LLMConsole:
             if self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio_transcript.delta" or data.get("type") == "response.text.delta"):
                 await self.ws.send_json({ "type": "generated.text.delta", "delta": data.get("delta") })
                 print("generated.text.delta:", data.get("delta"), flush=True)
-            elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio_transcript.done" or data.get("type") == "response.text.done"):
-                await self.ws.send_json({ "type": "generated.text.done", "text": data.get("transcript", data.get("text")) })
-                print("generated.text.done:", data.get("transcript", data.get("text")), flush=True)
+            elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.text.done"):
+                await self.ws.send_json({ "type": "generated.text.done", "text": data.get("text") })
+                print("generated.text.done:", data.get("text"), flush=True)
+                self.log("<< (text) " + data.get("text"))
+            elif self.status == LLMConsole.STATUS_RUN and data.get("type") == "response.audio_transcript.done":
+                await self.ws.send_json({ "type": "generated.text.done", "text": data.get("transcript") })
+                print("generated.text.done:", data.get("transcript"), flush=True)
+                self.log("<< (audio) " + data.get("transcript"))
             elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio.delta"):
                 await self.ws.send_json({ "type": "generated.audio.delta", "delta": data.get("delta") })
                 print("generated.audio.delta:", str(len(data.get("delta"))), flush=True)
             elif self.status == LLMConsole.STATUS_RUN and (data.get("type") == "response.audio.done"):
                 await self.ws.send_json({ "type": "generated.audio.done" })
                 print("generated.audio.done:", data.get("audio done!"), flush=True)
+            elif data.get("type") == "conversation.item.input_audio_transcription.completed":
+                self.log(">> (audio) " + data.get("transcript", ""))
             elif data.get("type") == "response.done":
                 self.status = LLMConsole.STATUS_WAIT
                 print("response.done", flush=True)
@@ -205,5 +228,11 @@ class LLMConsole:
         await asyncio.sleep(time)
 
     def log(self, s):
-        with open("srcs/conn.log", "+a") as file:
-            file.write(s + "\n")
+        self.log_file.write(str(datetime.now()) + ": " + re.sub(r"\s+", " ", s) + "\n")
+        self.log_file.flush()
+        
+    async def free(self):
+        self.log("close")
+        self.log_file.close()
+        await self.ws.close()
+        await self.ai.close()

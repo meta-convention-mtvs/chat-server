@@ -5,6 +5,7 @@ services:
     env_file: .env
     volumes:
       - ./srcs:/app/srcs
+      - ./conversation:/app/conversation
     ports:
       - ${PORT}:3000
     command: ["uvicorn", "srcs.main:app", "--reload", "--host=0.0.0.0", "--port=3000"]

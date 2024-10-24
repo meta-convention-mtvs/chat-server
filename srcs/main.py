@@ -15,9 +15,12 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     llm = LLMConsole(websocket)
     await llm.load()
-    while True:
-        message = await websocket.receive_json()
-        await command(llm, message)
+    try:
+        while True:
+            message = await websocket.receive_json()
+            await command(llm, message)
+    except:
+        await llm.free()
         
 
 @app.get("/chat-test")
