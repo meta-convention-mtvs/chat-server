@@ -120,6 +120,8 @@ class LLMConsole:
         self.ai = await websockets.connect(url, extra_headers=headers)
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
+    
+    async def set_org(self, org_id):
         await self.ai.send(json.dumps({
             "type": "session.update",
             "session": { 
@@ -127,8 +129,6 @@ class LLMConsole:
                 "input_audio_transcription": { "model": "whisper-1" }
             }
         }))
-    
-    async def set_org(self, org_id):
         await self.add_text("user", await self.load_org_info(org_id), "input_text")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
