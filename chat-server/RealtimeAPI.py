@@ -144,7 +144,21 @@ class LLMConsole:
             "session": { 
                 "instructions": INSTRUCTION,
                 "voice": "nova",
-                "input_audio_transcription": { "model": "whisper-1" }
+                "input_audio_transcription": { "model": "whisper-1" },
+                "tools": [
+                    {
+                        "type": "function",
+                        "name": "get_weather",
+                        "description": "get the current weather for a location, tell the user you are fetching the weather.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "location": { "type": "string" }
+                            },
+                            "required": ["location"]
+                        }
+                    },
+                ],
             }
         }))
         await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
@@ -166,20 +180,33 @@ class LLMConsole:
         self.use_audio = False
         await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
-    async def add_text(self, role, text, type="input_text", log_label="text"):
+    async def add_text(self, role, text, content_type="input_text", log_label="text", item_type="message"):
         await self.ai.send(json.dumps({
             "type": "conversation.item.create",
             "item": {
-                "type": "message",
+                "type": item_type,
                 "status": "completed",
                 "role": role,
-                "content": [{ "type": type, "text": text }]
+                "content": [{ "type": content_type, "text": text }]
             }
         }))
         if log_label == "prompt":
             self.log(f">>> ({log_label}) {text}")
+        elif item_type == "function_call_output":
+            self.log(f">>> (function_output) {text}")
         else:
             self.log(f">> ({log_label}) {text}")
+    
+    async def add_function_output(self, function_call_id, output):
+        await self.ai.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "function_call_output",
+                "call_id": function_call_id,
+                "output": output,
+            }
+        }))
+        
     
     def is_gen_ready(self):
         return self.status == LLMConsole.STATUS_WAIT
@@ -189,6 +216,7 @@ class LLMConsole:
         
     
     async def generate(self, modalities=["text", "audio"]):
+        print(modalities, flush=True)
         if not self.is_gen_ready():
             return
         self.modalities = modalities
@@ -231,15 +259,27 @@ class LLMConsole:
                 print("generated.audio.done:", data.get("audio done!"), flush=True)
             elif data.get("type") == "conversation.item.input_audio_transcription.completed":
                 self.log(">> (audio) " + data.get("transcript", ""))
+            elif data.get("type") == "response.function_call_arguments.done":
+                function_name = data.get("name")
+                function_arguments = json.loads(data.get("arguments", "{}"))
+                function_call_id = data.get("call_id")
+                function_output = await self.function_call(function_name, function_arguments)
+                self.log(">>> (function) " + function_name + " " + json.dumps(function_arguments) + str(function_output))
+                await self.add_function_output(function_call_id, function_output)
+            elif data.get("type") == "conversation.item.created" and data.get("item").get("type") == "function_call_output":
+                await self.generate(["text", "audio"])
             elif data.get("type") == "response.done":
                 self.status = LLMConsole.STATUS_WAIT
                 print("response.done", flush=True)
             elif data.get("type") == "error":
                 print("error:", data.get("error"), flush=True)
             else:
-                if "delta" in data:
+                if "delta" in data and len(data.get("delta")) > 100:
                     data["delta"] = str(len(data.get("delta")))
                 print("ect:", data, flush=True)
+
+    async def function_call(self, name, args):
+        return "맑음"
 
     async def send_text(self, text, time=0.016):
         if self.status != LLMConsole.STATUS_RUN or "text" not in self.generate_type:
