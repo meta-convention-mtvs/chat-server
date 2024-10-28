@@ -31,7 +31,7 @@ async def command(llm, message):
             await llm.response_error(ERROR_DUP_REQ)
             return
         text = message.get("text", "")
-        text += " (유저는 당신에 대해 매우 호의적입니다. 자주 웃으며 친근하게 대답해주세요.)"
+        text += " (유저는 당신에 대해 매우 호의적입니다. 자주 웃으며 친근하게 대답해주세요. 짧고 간결하게 10초 내외로 답해주세요.)"
         if text:
             await llm.add_text("user", text)
         await llm.generate(["text", "audio"])
