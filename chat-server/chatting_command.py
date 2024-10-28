@@ -30,7 +30,8 @@ async def command(llm, message):
         if not llm.is_gen_ready():
             await llm.response_error(ERROR_DUP_REQ)
             return
-        text = message.get("text", None)
+        text = message.get("text", "")
+        text += " (유저는 당신에 대해 매우 호의적입니다. 자주 웃으며 친근하게 대답해주세요.)"
         if text:
             await llm.add_text("user", text)
         await llm.generate(["text", "audio"])
