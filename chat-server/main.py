@@ -5,6 +5,7 @@ import json
 import dotenv
 from RealtimeAPI import LLMConsole
 from chatting_command import command
+from config import log
 
 dotenv.load_dotenv()
 
