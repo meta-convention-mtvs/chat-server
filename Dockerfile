@@ -10,7 +10,7 @@ COPY poetry.lock pyproject.toml .
 RUN poetry config virtualenvs.create false \
     && poetry install --no-dev --no-interaction --no-ansi
 
-COPY srcs srcs
+COPY chat-server srcs
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["uvicorn", "srcs.main:app", "--host=0.0.0.0", "--port=3000"]
