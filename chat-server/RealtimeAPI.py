@@ -112,7 +112,7 @@ Q. RINGWING 기체의 상용화가 예정된 시점이 언제인가요?
 A. 저희는 매우 도전적인 사업을 준비하고 있으므로 아직 상용화를 기대하기에는 이릅니다.
 """
 
-LOG_DIR = "conversation"
+LOG_DIR = "/conversation"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 class LLMConsole:

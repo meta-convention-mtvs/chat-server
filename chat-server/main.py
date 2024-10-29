@@ -3,8 +3,8 @@ from fastapi.responses import HTMLResponse
 import uvicorn
 import json
 import dotenv
-from .RealtimeAPI import LLMConsole
-from .chatting_command import command
+from RealtimeAPI import LLMConsole
+from chatting_command import command
 
 dotenv.load_dotenv()
 
@@ -25,7 +25,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/chat-test")
 async def root():
-    with open("srcs/test.html", "r") as file:
+    with open("test.html", "r") as file:
         return HTMLResponse(file.read())
 
 if __name__ == "__main__":
