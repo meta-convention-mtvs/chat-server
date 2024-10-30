@@ -1,7 +1,7 @@
 import os
 
 # 루트 디렉토리
-ROOT_DIR = os.path.dirname('.')
+ROOT_DIR = "/"
 
 
 # 로그 파일 저장 경로 설정
