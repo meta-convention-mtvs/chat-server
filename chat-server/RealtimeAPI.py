@@ -143,7 +143,6 @@ class LLMConsole:
             "type": "session.update",
             "session": { 
                 "instructions": INSTRUCTION,
-                "voice": "nova",
                 "input_audio_transcription": { "model": "whisper-1" }
             }
         }))
