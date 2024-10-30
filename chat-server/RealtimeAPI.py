@@ -111,6 +111,7 @@ A. 알루미늄 합금이 쓰입니다. 가볍고 강하며 부식 저항성이 
 Q. RINGWING 기체의 상용화가 예정된 시점이 언제인가요?
 A. 저희는 매우 도전적인 사업을 준비하고 있으므로 아직 상용화를 기대하기에는 이릅니다.
 """
+FOOTER = "만일 제가 담당자와의 연결을 원하면, 관심을 가져줌에 감사함을 전하고, 화면에 보이는 '비즈니스 미팅 신청' 버튼을 누르라고 응답해주세요."
 
 LOG_DIR = "/conversation"
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -147,6 +148,7 @@ class LLMConsole:
             }
         }))
         await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
+        await self.add_text("user", FOOTER, "input_text", log_label="prompt")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
     async def load_org_info(self, org_id):
