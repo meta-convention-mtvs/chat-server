@@ -1,14 +1,25 @@
 services:
   chat:
-    build: .
+    build: chat-server
     restart: always
     env_file: .env
     volumes:
       - ./chat-server:/app/srcs
-      - ./conversation:/app/conversation
+      - ./conversation:/conversation
     ports:
       - ${PORT}:3000
-    command: ["uvicorn", "srcs.main:app", "--reload", "--host=0.0.0.0", "--port=3000"]
+    command: ["uvicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=3000"]
+
+  recommendation:
+    build: recommendation
+    restart: always
+    env_file: .env
+    ports:
+      - ${REC_PORT}:3000
+    volumes:
+      - ./recommendation:/app/srcs
+      - ./logs:/app/logs
+    command: ["uvicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=3000"]
 
   nginx:
     image: nginx:latest

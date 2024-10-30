@@ -5,12 +5,11 @@ RUN apk add git vim sudo curl gcc make dumb-init ffmpeg
 
 RUN pip install poetry
 
-WORKDIR /app
-COPY poetry.lock pyproject.toml .
+WORKDIR /app/srcs
+COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
-
-COPY chat-server srcs
+    && poetry install --only main --no-interaction --no-ansi
+COPY . .
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["uvicorn", "srcs.main:app", "--host=0.0.0.0", "--port=3000"]
+CMD ["uvicorn", "main:app", "--host=0.0.0.0", "--port=3000"]
