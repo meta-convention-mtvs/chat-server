@@ -18,7 +18,7 @@ time_rotating_handler = TimedRotatingFileHandler(
 time_rotating_handler.setLevel(logging.DEBUG)  # 모든 로그 레벨을 기록
 
 # 로그 형식 설정
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s - %(filename)s - %(funcName)s - %(levelname)s - %(message)s')
 time_rotating_handler.setFormatter(formatter)
 time_rotating_handler.suffix = "%Y-%m-%d_%H-%M-%S.log"
 
