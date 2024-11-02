@@ -3,6 +3,9 @@ import os
 # 루트 디렉토리
 ROOT_DIR = "/"
 
+CONFIG_DIR = 'config'
+CHATBOT_CONFIG = os.path.join(CONFIG_DIR, 'chatbot_config.json')
+
 DATA_DIR = 'data'
 
 # 로그 파일 저장 경로 설정
