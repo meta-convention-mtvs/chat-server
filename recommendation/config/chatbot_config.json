@@ -7,7 +7,7 @@
         "history": false
     },
     "keyword_extraction": {
-        "kind_of_model": "gpt-4o",
+        "kind_of_model": "gpt-4o-mini",
         "model_name": "keyword_extraction",
         "prompt_concept": "당신은 핵심 키워드를 추출하는 전문가입니다. 주어진 내용에서 핵심 키워드만을 영어로 반환하세요. 핵심 키워드는 10개 내외로 하며, 제품명은 포함하지 마세요. 출력 형식은 다음과 같습니다: keyword1, keyword2,...",
         "temperature": 1,

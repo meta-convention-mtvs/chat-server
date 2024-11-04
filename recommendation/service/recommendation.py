@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import numpy as np
 from deep_translator import GoogleTranslator
 from tqdm import tqdm
@@ -18,19 +19,17 @@ keyword_chatbot = chatbot_manager.get_chatbot('keyword_extraction')
 recommend_reaason_chatbot = chatbot_manager.get_chatbot('recommendation_reason')
 
 # 추천 시스템
-def recommend(user:UserInfo, recommend_num:int=10) -> list[dict]:
-    user_data = []
-    if traslated_value:= GoogleTranslator(source='auto', target='en').translate(str(user)):
-        user_data.append(traslated_value)
-        
-    user_embedding =  embedding_model.encode(user, task='text-matching')
-    
-    # 저장된 인덱스를 파일에서 로드
-    loaded_index = faiss.read_index(f'{DATA_DIR}/company.index')
-    loaded_metadata = load_json_data(f'{DATA_DIR}/company_metadata.json')
-    _, indices = loaded_index.search(np.array(user_embedding).reshape(1, -1), recommend_num)
-    recommendations = [loaded_metadata[indices[0][i]] for i in range(recommend_num)]
-    return recommendations
+def recommend(user:str, recommend_num:int=10) -> list[dict]:
+    try:
+        user_embedding =  embedding_model.encode([user], task='text-matching')
+        # 저장된 인덱스를 파일에서 로드
+        loaded_index = faiss.read_index(f'{DATA_DIR}/company.index')
+        loaded_metadata = load_json_data(f'{DATA_DIR}/company_metadata.json')
+        _, indices = loaded_index.search(np.array(user_embedding).reshape(1, -1), recommend_num)
+        recommendations = [loaded_metadata[indices[0][i]] for i in range(recommend_num)]
+        return recommendations
+    except Exception as e:
+        logging.error(e)    
 
 
 # 전부 없음인 경우 추천하지 않음
@@ -41,11 +40,14 @@ def check_userinfo(userinfo:UserInfo) -> bool:
     
 
 def get_user_keywords(userinfo:UserInfo) -> str:
-    try:
-        user = keyword_chatbot.exec(f'{userinfo}에서 핵심 키워드를 추출해줘', None)
+    try: 
+        user_data = []
+        if traslated_value:= GoogleTranslator(source='auto', target='en').translate(str(userinfo)):
+            user_data.append(traslated_value)   
+        user = keyword_chatbot.exec(f'{userinfo}', None)
+        return user
     except Exception as e:
-        logging.Error(e)
-    return user
+        logging.error(e)
 
 
 def add_reason_of_recommendation(userinfo:UserInfo, recommandation_data:list[dict]) -> str:
@@ -53,10 +55,9 @@ def add_reason_of_recommendation(userinfo:UserInfo, recommandation_data:list[dic
         for company in recommandation_data:
             answer = recommend_reaason_chatbot.exec(f'유저 정보: {userinfo}, 기업 정보: {company}', None)
             company['reason'] = answer
+        return recommandation_data
     except Exception as e:
-        logging.Error(e)
-    return recommandation_data
-
+        logging.error(e)
 
 
 def add_reason_of_recommendation_parallel(userinfo: UserInfo, recommendation_data: list[dict]) -> list[dict]:
@@ -69,7 +70,7 @@ def add_reason_of_recommendation_parallel(userinfo: UserInfo, recommendation_dat
             print(f"Error processing company: {e}")
             return company
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         return list(executor.map(process_company, recommendation_data))
 
 
