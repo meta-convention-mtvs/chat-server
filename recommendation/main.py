@@ -5,6 +5,7 @@ from schema.user import UserInfo
 from service.recommendation import exec_recommendation
 from config import log
 
+
 app = FastAPI()
 
 # 인증서 관련 오류 방지
