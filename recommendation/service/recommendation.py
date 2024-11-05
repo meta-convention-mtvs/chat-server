@@ -34,7 +34,7 @@ def recommend(user:str, recommend_num:int=10) -> list[dict]:
 
 # 전부 없음인 경우 추천하지 않음
 def check_userinfo(userinfo:UserInfo) -> bool:
-    if '없음' in userinfo.industry_type and '없음' in userinfo.selected_interests and '없음' == userinfo.situation_description:
+    if '-' in userinfo.industry_type and '-' in userinfo.selected_interests and '-' == userinfo.situation_description:
         return False
     return True
     
