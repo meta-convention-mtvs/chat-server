@@ -3,6 +3,7 @@ import uvicorn
 import ssl
 from schema.user import UserInfo
 from service.recommendation import exec_recommendation
+from config import log
 
 
 app = FastAPI()
