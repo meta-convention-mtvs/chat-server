@@ -100,9 +100,9 @@ class Room:
             await user.send_bye()
             await user.conn.disconnect()
         elif type == "conversation.request_speech":
-            print("conversation.request_speech", flush=True)
             if self.speech is None:
                 self.speech = user
+                self.order += 1
                 await self.broadcast_approve(self.order, self.speech, "")
             else:
                 await user.send_error(ERR_FAIL_APPROVE_SPEECH)
