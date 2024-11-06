@@ -1,10 +1,10 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 import uvicorn
-import json
 import dotenv
 from RealtimeAPI import LLMConsole
 from chatting_command import command
+from MeetingRoom import Manager as MeetingRoomManager
 from config import log
 
 dotenv.load_dotenv()
@@ -27,6 +27,17 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.get("/chat-test")
 async def root():
     with open("test.html", "r") as file:
+        return HTMLResponse(file.read())
+
+meeting_manager = MeetingRoomManager()
+@app.websocket("/translation")
+async def translation_endpoint(websocket: WebSocket):
+    user = await meeting_manager.accept(websocket)
+    await user.conn.loop_until_close()
+
+@app.get("/translation-test")
+async def translation_test():
+    with open("translation_test.html", "r") as file:
         return HTMLResponse(file.read())
 
 if __name__ == "__main__":
