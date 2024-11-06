@@ -2,22 +2,20 @@ import websockets
 import asyncio
 import json
 import os
+from EventHandler import EventHandler
 
 class DisconnectedError(Exception):
     """OpenAI의 RealtimeAPI와 연결이 끊겼거나 연결이 되어 있지 않음"""
 
-class UnexpectedParams(Exception):
-    """예상하지 못한 값 입력"""
-
-class RealtimeClient:
+class RealtimeClient(EventHandler):
     model = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"
     headers = {
         "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
         "OpenAI-Beta": "realtime=v1",
     }
     def __init__(self):
+        super().__init__()
         self.ws: websockets.client.WebSocketClientProtocol = None
-        self.callbacks: dict[str, list] = { "*": [ ]}
         self.listen_task = None
     
     def log(self, message):
@@ -43,29 +41,10 @@ class RealtimeClient:
                 raw = await self.ws.recv()
                 json_data = json.loads(raw)
                 type = json_data["type"]
-                target_callbacks = self.callbacks.get(type, [])
-                for callback in target_callbacks:
-                    await callback(json_data)
-                wildcards = self.callbacks.get("*", [])
-                for callback in wildcards:
-                    await callback(json_data)
+                callbacks = [callback(json_data) for callback in self.get_callbacks(type)]
+                await asyncio.gather(*callbacks, return_exceptions=True)
             except websockets.exceptions.ConnectionClosed:
                 return
-
-    def on(self, type: str, callback: callable):
-        if type is None or not type:
-            raise UnexpectedParams()
-        if type not in self.callbacks:
-            self.callbacks[type] = []
-        self.callbacks[type].append(callback)
-
-    def off(self, type: str, callback: callable):
-        if type is None or not type:
-            raise UnexpectedParams()
-        if type not in self.callbacks:
-            return
-        self.callbacks[type].remove(callback)
-        
 
 class RealtimeDebugger:
     def __init__(self, client: RealtimeClient):
