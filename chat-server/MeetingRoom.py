@@ -34,6 +34,9 @@ class Manager:
                 return
             user.id = userid
             new_room = self.create_room(roomid)
+            if new_room is None:
+                await user.send_error(ERR_FAIL_CREATE_ROOM)
+                return
             await new_room.join(user)
         elif type == "room.join":
             lang = message.get("lang", None)
@@ -53,8 +56,15 @@ class Manager:
     
     def create_room(self, roomid = None) -> 'Room':
         new_room = Room(self, roomid)
+        for room in self.rooms:
+            if room.uuid == new_room.uuid:
+                return None
         self.rooms.append(new_room)
         return new_room
+
+    def destroy_room(self, room: 'Room'):
+        room.free()
+        self.rooms.remove(room)
 
     async def broadcast(self, conns: list['Connection'], json_data: dict):
         await asyncio.gather(*[conn.send(json_data) for conn in conns], return_exceptions=True)
@@ -81,12 +91,14 @@ class Room:
         if type == "disconnected":
             if self.speech == user:
                 self.speech = None
-            # TODO: if user count zero -> destroy room
-            pass
-        elif type == "room.leave":
             self.users.remove(user)
             user.set_observer(self.manager)
             await self.broadcast_update()
+            if len(self.users) == 0:
+                self.manager.destroy_room(self)
+        elif type == "room.leave":
+            await user.send_bye()
+            await user.conn.disconnect()
         elif type == "conversation.request_speech":
             print("conversation.request_speech", flush=True)
             if self.speech is None:
@@ -95,17 +107,28 @@ class Room:
             else:
                 await user.send_error(ERR_FAIL_APPROVE_SPEECH)
         elif type == "conversation.buffer.add_audio":
+            if self.speech != user:
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
             # TODO: add audio source to realtime-api
             pass
         elif type == "conversation.buffer.clear_audio":
-            if self.speech == user:
-                self.speech = None
+            if self.speech != user:
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            self.speech = None
         elif type == "conversation.done_speech":
-            if self.speech == user:
-                self.speech = None
+            if self.speech != user:
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            self.speech = None
         else:
             await user.send_error(ERR_FATAL)
             return
+
+    def free(self):
+        # TODO: disconnect realtime-api
+        pass
 
     async def broadcast(self, json_data: dict):
         await asyncio.gather(*[user.send(json_data) for user in self.users], return_exceptions=True)
