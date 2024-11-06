@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Translation Test</title>
+</head>
+
+<body>
+    <h1>Translation Test</h1>
+    <form action="" onsubmit="sendMessage(event)">
+        <select name="request" id="request">
+            <option value="room.create">room.create</option>
+            <option value="room.join">room.join</option>
+            <option value="conversation.request_speech">conversation.request_speech</option>
+            <option value="conversation.buffer.add_audio">conversation.buffer.add_audio</option>
+            <option value="conversation.buffer.clear_audio">conversation.buffer.clear_audio</option>
+            <option value="conversation.done_speech">conversation.done_speech</option>
+            <option value="room.leave">room.leave</option>
+        </select>
+        <div>
+            <textarea type="text" id="messageText"
+                autocomplete="off">{"lang": "ko", "userid": "abcd", "roomid": "qwer"}</textarea>
+        </div>
+        <button>Send</button>
+    </form>
+    <ul id='messages'>
+    </ul>
+    <script src="https://unpkg.com/pcm-player"></script>
+    <script>
+        var player = new PCMPlayer({
+            inputCodec: 'Int16',
+            channels: 1,
+            sampleRate: 24000,
+            flushingTime: 2000
+        });
+        var ws = new WebSocket("ws://" + location.host + "/translation");
+        function appendText(text) {
+            var messages = document.getElementById('messages')
+            var message = document.createElement('li')
+            var content = document.createTextNode(text)
+            message.appendChild(content)
+            messages.prepend(message)
+        }
+
+        ws.onmessage = e => {
+            const res = JSON.parse(e.data);
+            if (res.type == "generated.audio.delta") {
+                const delta = res.delta;
+                const binary = atob(delta);
+                const bytes = new Uint16Array(binary.length / 2);
+                for (let i = 0; i < binary.length / 2; i++) {
+                    bytes[i] = (binary.charCodeAt(i * 2) & 0xff) + ((binary.charCodeAt(i * 2 + 1) & 0xff) << 8);
+                }
+                player.feed(bytes)
+            }
+            appendText("receive: " + e.data);
+        }
+        function sendMessage(event) {
+            var input = document.getElementById("messageText")
+            try {
+                data = JSON.parse(input.value)
+            } catch {
+                alert("json 형식");
+                return;
+            }
+            type = { "type": document.querySelector("#request").value }
+            payload = { ...type, ...data }
+            player = new PCMPlayer({
+                inputCodec: 'Int16',
+                channels: 1,
+                sampleRate: 24000,
+                flushingTime: 2000
+            });
+            ws.send(JSON.stringify(payload))
+
+            appendText("send: " + JSON.stringify(payload))
+
+            if (payload.type == "room.create" || payload.type == "room.join") {
+                document.querySelector("#request").value = "conversation.request_speech";
+                input.value = '{}';
+            }
+            else {
+                input.value = '{}';
+            }
+            event.preventDefault()
+        }
+    </script>
+</body>
+
+</html>
