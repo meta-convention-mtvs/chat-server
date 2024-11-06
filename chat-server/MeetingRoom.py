@@ -122,6 +122,55 @@ class Room:
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             self.speech = None
+
+
+
+
+            await self.broadcast_text_delta(self.order, "메타")
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_0.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await self.broadcast_text_delta(self.order, " 컨벤션")
+            await self.broadcast_text_delta(self.order, "에")
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_1.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            await self.broadcast_text_delta(self.order, " 오신")
+            await self.broadcast_text_delta(self.order, " 것")
+            await self.broadcast_text_delta(self.order, "을")
+            with open("sample/pcm_file_2.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_3.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_4.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_5.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await self.broadcast_text_delta(self.order, " 환영")
+            await self.broadcast_text_delta(self.order, "합니다")
+            await self.broadcast_text_delta(self.order, ".")
+            await self.broadcast_text_done(self.order, "메타 컨벤션에 오신 것을 환영합니다.")
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_6.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_7.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_8.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await asyncio.sleep(0.1)
+            with open("sample/pcm_file_9.txt", "r") as file:
+                await self.broadcast_audio_delta(self.order, file.read())
+            await self.broadcast_audio_done(self.order)
+
+
+
+
         else:
             await user.send_error(ERR_FATAL)
             return
