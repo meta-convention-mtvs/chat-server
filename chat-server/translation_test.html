@@ -44,7 +44,7 @@
 
         ws.onmessage = e => {
             const res = JSON.parse(e.data);
-            if (res.type == "generated.audio.delta") {
+            if (res.type == "conversation.audio.delta") {
                 const delta = res.delta;
                 const binary = atob(delta);
                 const bytes = new Uint16Array(binary.length / 2);
