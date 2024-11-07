@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+import logging
+from fastapi import FastAPI, HTTPException, status
 import uvicorn
-from schema.user import UserInfo
+from schema.user import BuyerAIConversationSummaryRequest
 from config import log
 from service.summary import exec_summary
 
@@ -12,8 +13,15 @@ async def hello():
     return {'result': 'summary'}
 
 @app.post("/summary")
-async def summary(userinfo:'UserInfo') -> dict:
-    return exec_summary(None)
+async def summary(userinfo:BuyerAIConversationSummaryRequest) -> dict:
+    try:
+        return exec_summary(userinfo)
+    except Exception as e:
+        logging.error(e)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="유저가 해당 기업의 AI직원과 대화한 기록을 찾을 수 없음",
+        )
 
 
 if __name__ == "__main__":
