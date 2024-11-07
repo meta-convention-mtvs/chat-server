@@ -4,6 +4,7 @@ from EventHandler import EventHandler
 from RealtimeClient import RealtimeClient
 from fastapi import WebSocket
 from prompt import translation
+import logging
 
 ERR_FATAL = 1
 ERR_FAIL_CREATE_ROOM = 2
@@ -143,15 +144,15 @@ class Room:
         elif type == "conversation.buffer.add_audio":
             audio = message.get("audio", None)
             if audio is None:
-                print("debug: conversation.buffer.add_audio - no audio field", flush=True)
+                logging.debug("conversation.buffer.add_audio - no audio field")
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             if self.speech != user:
-                print("debug: conversation.buffer.add_audio - no speech", flush=True)
+                logging.debug("conversation.buffer.add_audio - no speech")
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             if self.realtime.is_usable() == False:
-                print("debug: conversation.buffer.add_audio - no realtime", flush=True)
+                logging.debug("conversation.buffer.add_audio - no realtime")
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             await self.realtime.send({
@@ -294,6 +295,7 @@ class Connection(EventHandler):
                 await asyncio.gather(*callbacks, return_exceptions=True)
         except Exception as e:
             print(e, flush=True)
+            logging.error(e)
             await self.disconnect()
 
     def observe_disconnect(self, observer):
