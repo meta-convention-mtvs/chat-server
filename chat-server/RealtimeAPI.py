@@ -8,6 +8,7 @@ import os
 import re
 from prompt import instruction, footer
 from sample import org_rockhead_martin
+import iso_639_lang
 
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 LOG_DIR = "/conversation"
@@ -36,7 +37,8 @@ class LLMConsole:
         loop = asyncio.get_event_loop()
         loop.create_task(self.onmessage())
     
-    async def set_org(self, org_id):
+    async def set_org(self, user_id, lang_code, org_id):
+        self.log(f"*** {user_id} {lang_code} {org_id}")
         await self.ai.send(json.dumps({
             "type": "session.update",
             "session": { 
@@ -44,8 +46,9 @@ class LLMConsole:
                 "input_audio_transcription": { "model": "whisper-1" }
             }
         }))
+        lang = iso_639_lang.to_full_lang(lang_code)
         await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
-        await self.add_text("user", footer.CONTENT, "input_text", log_label="prompt")
+        await self.add_text("user", footer.CONTENT.format(lang), "input_text", log_label="prompt")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
     
     async def load_org_info(self, org_id):
