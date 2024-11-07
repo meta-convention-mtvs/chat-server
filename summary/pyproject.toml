@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "recommendation"
+version = "0.1.0"
+description = ""
+authors = ["yeonwlee <tlstprl1806@naver.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["all"], version = "^0.115.4"}
+uvicorn = "^0.32.0"
+python-dotenv = "^1.0.1"
+openai = "^1.52.2"
+langchain = "^0.3.6"
+langchain-community = "^0.3.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
