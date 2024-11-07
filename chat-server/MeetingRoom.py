@@ -101,7 +101,10 @@ class Room:
             instructions = translation.CONTENT.format(lang1=lang1, lang2=lang2)
             await self.realtime.send({
                 "type": "session.update",
-                "session": { "instructions": instructions }
+                "session": {
+                    "instructions": instructions,
+                    "input_audio_transcription": { "model": "whisper-1" },
+                }
             })
             self.ready = True
         await self.broadcast_update()
@@ -122,6 +125,8 @@ class Room:
             await self.broadcast_audio_delta(self.order, json_data.get("delta", ""))
         elif type == "response.audio.done":
             await self.broadcast_audio_done(self.order)
+        elif type == "conversation.item.input_audio_transcription.completed":
+            print(json_data.get("transcript", ""), flush=True)
 
     async def onmessage(self, user: 'User', message):
         type = message.get("type", "")
