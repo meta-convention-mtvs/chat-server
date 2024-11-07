@@ -29,6 +29,18 @@ services:
               count: 1
               capabilities: [gpu]
 
+  summary:
+    build: summary
+    restart: always
+    env_file: .env
+    volumes:
+      - ./summary:/app/srcs
+      - ./conversation:/conversation
+      - ./logs:/logs
+    ports:
+      - ${SUM_PORT}:3000
+    command: ["uvicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=3000"]
+    
   nginx:
     image: nginx:latest
     restart: always
