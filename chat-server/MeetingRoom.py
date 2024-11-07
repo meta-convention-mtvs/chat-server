@@ -3,6 +3,7 @@ from uuid import uuid4
 from EventHandler import EventHandler
 from RealtimeClient import RealtimeClient
 from fastapi import WebSocket
+from prompt import translation
 
 ERR_FATAL = 1
 ERR_FAIL_CREATE_ROOM = 2
@@ -62,15 +63,17 @@ class Manager:
         self.rooms.append(new_room)
         return new_room
 
-    def destroy_room(self, room: 'Room'):
-        room.free()
+    async def destroy_room(self, room: 'Room'):
         self.rooms.remove(room)
+        await room.free()
 
     async def broadcast(self, conns: list['Connection'], json_data: dict):
         await asyncio.gather(*[conn.send(json_data) for conn in conns], return_exceptions=True)
 
 class Room:
     def __init__(self, manager: Manager, id = None):
+        self.realtime = RealtimeClient()
+        self.realtime.on("*", self.onrealtime)
         self.manager = manager
         if id is None or not id:
             id = str(uuid4())
@@ -84,7 +87,31 @@ class Room:
         self.users.append(user)
         user.set_observer(self)
         await user.send_join(self.uuid, self.users)
+        if len(self.users) > 1 and self.realtime.is_usable() == False:
+            await self.realtime.connect()
+            await self.realtime.send({
+                "type": "session.update",
+                "session": { "instructions": translation.CONTENT.format(lang1="Korean", lang2="English") }
+            })
+            self.ready = True
         await self.broadcast_update()
+
+    async def onrealtime(self, json_data):
+        type = json_data.get("type", "")
+        if type == "error":
+            print(json_data, flush=True)
+        elif type == "response.text.delta":
+            await self.broadcast_text_delta(self.order, json_data.get("delta", ""))
+        elif type == "response.text.done":
+            await self.broadcast_text_done(self.order, json_data.get("text", ""))
+        elif type == "response.audio_transcript.delta":
+            await self.broadcast_text_delta(self.order, json_data.get("delta", ""))
+        elif type == "response.audio_transcript.done":
+            await self.broadcast_text_done(self.order, json_data.get("transcript", ""))
+        elif type == "response.audio.delta":
+            await self.broadcast_audio_delta(self.order, json_data.get("delta", ""))
+        elif type == "response.audio.done":
+            await self.broadcast_audio_done(self.order)
 
     async def onmessage(self, user: 'User', message):
         type = message.get("type", "")
@@ -95,7 +122,7 @@ class Room:
             user.set_observer(self.manager)
             await self.broadcast_update()
             if len(self.users) == 0:
-                self.manager.destroy_room(self)
+                await self.manager.destroy_room(self)
         elif type == "room.leave":
             await user.send_bye()
             await user.conn.disconnect()
@@ -107,77 +134,55 @@ class Room:
             else:
                 await user.send_error(ERR_FAIL_APPROVE_SPEECH)
         elif type == "conversation.buffer.add_audio":
-            if self.speech != user:
+            audio = message.get("audio", None)
+            if audio is None:
+                print("debug: conversation.buffer.add_audio - no audio field", flush=True)
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
-            # TODO: add audio source to realtime-api
-            pass
+            if self.speech != user:
+                print("debug: conversation.buffer.add_audio - no speech", flush=True)
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            if self.realtime.is_usable() == False:
+                print("debug: conversation.buffer.add_audio - no realtime", flush=True)
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            await self.realtime.send({
+                "type": "input_audio_buffer.append",
+                "audio": audio
+            })
         elif type == "conversation.buffer.clear_audio":
             if self.speech != user:
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             self.speech = None
+            if self.realtime.is_usable() == False:
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            await self.ready.send({
+                "type": "input_audio_buffer.clear"
+            })
         elif type == "conversation.done_speech":
             if self.speech != user:
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
             self.speech = None
-
-
-
-
-            await self.broadcast_text_delta(self.order, "메타")
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_0.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await self.broadcast_text_delta(self.order, " 컨벤션")
-            await self.broadcast_text_delta(self.order, "에")
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_1.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            await self.broadcast_text_delta(self.order, " 오신")
-            await self.broadcast_text_delta(self.order, " 것")
-            await self.broadcast_text_delta(self.order, "을")
-            with open("sample/pcm_file_2.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_3.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_4.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_5.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await self.broadcast_text_delta(self.order, " 환영")
-            await self.broadcast_text_delta(self.order, "합니다")
-            await self.broadcast_text_delta(self.order, ".")
-            await self.broadcast_text_done(self.order, "메타 컨벤션에 오신 것을 환영합니다.")
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_6.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_7.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_8.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await asyncio.sleep(0.1)
-            with open("sample/pcm_file_9.txt", "r") as file:
-                await self.broadcast_audio_delta(self.order, file.read())
-            await self.broadcast_audio_done(self.order)
-
-
-
+            if self.realtime.is_usable() == False:
+                await user.send_error(ERR_FAIL_SPEECH)
+                return
+            await self.realtime.send({
+                "type": "input_audio_buffer.commit"
+            })
+            await self.realtime.send({
+                "type": "response.create"
+            })
 
         else:
             await user.send_error(ERR_FATAL)
             return
 
-    def free(self):
-        # TODO: disconnect realtime-api
-        pass
+    async def free(self):
+        await self.realtime.disconnect()
 
     async def broadcast(self, json_data: dict):
         await asyncio.gather(*[user.send(json_data) for user in self.users], return_exceptions=True)
@@ -280,7 +285,8 @@ class Connection(EventHandler):
                 type = data.get("type", "")
                 callbacks = [ callback(data) for callback in self.get_callbacks(type) ]
                 await asyncio.gather(*callbacks, return_exceptions=True)
-        except:
+        except Exception as e:
+            print(e, flush=True)
             await self.disconnect()
 
     def observe_disconnect(self, observer):
