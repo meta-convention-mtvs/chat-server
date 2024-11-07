@@ -16,6 +16,7 @@ class RealtimeClient(EventHandler):
     def __init__(self):
         super().__init__()
         self.ws: websockets.client.WebSocketClientProtocol = None
+        self.usable = False
         self.listen_task = None
     
     def log(self, message):
@@ -25,8 +26,10 @@ class RealtimeClient(EventHandler):
         self.ws = await websockets.connect(RealtimeClient.model, extra_headers=RealtimeClient.headers)
         loop = asyncio.get_event_loop()
         self.listen_task = loop.create_task(self.onmessage())
+        self.usable = True
 
     async def disconnect(self):
+        self.usable = False
         if self.ws.close_code is None:
             await self.ws.close()
 
@@ -44,7 +47,11 @@ class RealtimeClient(EventHandler):
                 callbacks = [callback(json_data) for callback in self.get_callbacks(type)]
                 await asyncio.gather(*callbacks, return_exceptions=True)
             except websockets.exceptions.ConnectionClosed:
+                self.usable = False
                 return
+
+    def is_usable(self):
+        return self.usable
 
 class RealtimeDebugger:
     def __init__(self, client: RealtimeClient):
