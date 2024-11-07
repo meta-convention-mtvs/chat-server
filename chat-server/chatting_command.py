@@ -8,10 +8,12 @@ async def command(llm, message):
     llm.log("< " + message["type"])
     if message["type"] == "config.update":
         org_id = message.get("org")
+        user_id = message.get("userid", "none")
+        lang = message.get("lang", "ko")
         if not org_id:
             await llm.ws.send_json(ERROR_REQ_PARAM)
         else:
-            await llm.set_org(org_id)
+            await llm.set_org(user_id, lang, org_id)
 
     elif message["type"] == "buffer.add_audio":
         audio_data = message.get("audio")
