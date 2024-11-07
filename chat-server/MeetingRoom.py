@@ -34,6 +34,7 @@ class Manager:
                 await user.send_error(ERR_FAIL_CREATE_ROOM)
                 return
             user.id = userid
+            user.lang = lang
             new_room = self.create_room(roomid)
             if new_room is None:
                 await user.send_error(ERR_FAIL_CREATE_ROOM)
@@ -46,6 +47,8 @@ class Manager:
             if lang is None or userid is None:
                 await user.send_error(ERR_FAIL_CREATE_ROOM)
                 return
+            user.id = userid
+            user.lang = lang
             for room in self.rooms:
                 if room.uuid == roomid:
                     await room.join(user)
@@ -82,16 +85,19 @@ class Room:
         self.users: list[User] = []
         self.order = 0
         self.speech = None
+        self.langs = []
 
     async def join(self, user: 'User'):
         self.users.append(user)
         user.set_observer(self)
         await user.send_join(self.uuid, self.users)
-        if len(self.users) > 1 and self.realtime.is_usable() == False:
+        self.langs = list(set([user.lang for user in self.users]))
+        if len(self.users) > 1 and self.realtime.is_usable() == False and len(self.langs) > 1:
             await self.realtime.connect()
+            instructions = translation.CONTENT.format(lang1=self.langs[0], lang2=self.langs[1])
             await self.realtime.send({
                 "type": "session.update",
-                "session": { "instructions": translation.CONTENT.format(lang1="Korean", lang2="English") }
+                "session": { "instructions": instructions }
             })
             self.ready = True
         await self.broadcast_update()
@@ -130,7 +136,8 @@ class Room:
             if self.speech is None:
                 self.speech = user
                 self.order += 1
-                await self.broadcast_approve(self.order, self.speech, "")
+                trans = self.langs[0] if self.speech.lang != self.langs[0] else self.langs[1]
+                await self.broadcast_approve(self.order, self.speech, "" if trans is None else trans)
             else:
                 await user.send_error(ERR_FAIL_APPROVE_SPEECH)
         elif type == "conversation.buffer.add_audio":
