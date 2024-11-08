@@ -30,7 +30,6 @@ services:
               count: 1
               capabilities: [ gpu ]
     profiles:
-      - all
       - recommendation
 
   summary:
@@ -55,10 +54,11 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./conversation:/usr/share/nginx/html/chat/log
     ports:
-      - ${LOG_PORT}:80
+      - ${MAIN_PORT}:80
     command: [ "/bin/sh", "-c", "envsubst < /etc/nginx/upstream.conf > /etc/nginx/conf.d/upstream.conf && exec nginx -g 'daemon off;'" ]
     profiles:
       - all
       - chat
       - recommendation
       - summary
+      - nginx
