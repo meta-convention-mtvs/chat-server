@@ -59,6 +59,4 @@ services:
     profiles:
       - all
       - chat
-      - recommendation
       - summary
-      - nginx
