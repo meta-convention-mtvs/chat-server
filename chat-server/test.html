@@ -31,7 +31,7 @@
             sampleRate: 24000,
             flushingTime: 2000
         });
-        var ws = new WebSocket("ws://" + location.host);
+        var ws = new WebSocket("ws://" + location.host + "/chat");
         function appendText(text) {
             var messages = document.getElementById('messages')
             var message = document.createElement('li')

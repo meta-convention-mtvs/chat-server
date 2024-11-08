@@ -24,7 +24,7 @@ async def websocket_endpoint(websocket: WebSocket):
         await llm.free()
         
 
-@app.get("/chat-test")
+@app.get("/chat/test")
 async def root():
     with open("test.html", "r") as file:
         return HTMLResponse(file.read())
@@ -35,7 +35,7 @@ async def translation_endpoint(websocket: WebSocket):
     user = await meeting_manager.accept(websocket)
     await user.conn.loop_until_close()
 
-@app.get("/translation-test")
+@app.get("/translation/test")
 async def translation_test():
     with open("translation_test.html", "r") as file:
         return HTMLResponse(file.read())
