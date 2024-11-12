@@ -45,8 +45,8 @@ def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
                 search_file = file_path
                 break
             except IndexError as e:
+                logging.error(file_path)
                 logging.error(e)
-                os.remove(file_path)
                 continue
     if search_file == None:
         return None
