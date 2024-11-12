@@ -6,6 +6,7 @@ from config.path import CHATBOT_CONFIG, AI_CONVERSATION_DIR
 import logging
 from pprint import pprint
 from glob import glob
+import os
 
 chatbot_manager = ChatBotManager(CHATBOT_CONFIG)
 summary_chatbot = chatbot_manager.get_chatbot('summary')
@@ -33,15 +34,20 @@ def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
     for file_path in sorted(glob(f"{AI_CONVERSATION_DIR}/*"), reverse=True):
         with open(file_path, "r") as file:
             file.readline()  # skip
-            user_info_line = file.readline()
-            splited = user_info_line.split(" ") # date time *** user_id lang_code org_id
-            user_id = splited[3].strip()
-            lang_code = splited[4].strip()
-            org_id = splited[5].strip()
-            if (user_id == userinfo.user_id and org_id == userinfo.org_id) == False:
+            try:
+                user_info_line = file.readline()
+                splited = user_info_line.split(" ") # date time *** user_id lang_code org_id
+                user_id = splited[3].strip()
+                lang_code = splited[4].strip()
+                org_id = splited[5].strip()
+                if (user_id == userinfo.user_id and org_id == userinfo.org_id) == False:
+                    continue
+                search_file = file_path
+                break
+            except IndexError as e:
+                logging.error('invalid log: ' + e)
+                os.remove(file_path)
                 continue
-            search_file = file_path
-            break
     if search_file == None:
         return None
     print(search_file)
