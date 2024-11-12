@@ -81,7 +81,7 @@ def exec_recommendation(userinfo:UserInfo) -> str:
     user = get_user_keywords(userinfo)
     recommendations = recommend(user)
     # result = add_reason_of_recommendation(userinfo, recommendations)
-    result = add_reason_of_recommendation_parallel(userinfo, recommendations)
+    # result = add_reason_of_recommendation_parallel(userinfo, recommendations)
 
-    return result
+    return recommendations
 
