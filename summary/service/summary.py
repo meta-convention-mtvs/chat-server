@@ -1,4 +1,5 @@
 from schema.user import BuyerAIConversationSummaryRequest
+from service import iso_639_lang
 from utils.file_util import read_text
 from model.chatbot import ChatBotManager
 from config.path import CHATBOT_CONFIG, AI_CONVERSATION_DIR
@@ -27,12 +28,7 @@ def refine_script(text:list[str]) -> dict:
                 appended_data.append(f'{cur_teller}: {script}')
     return data, '\n'.join(appended_data)
 
-# TODO: 동적으로 동작하도록 하기
 def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
-    # 읽기 -> 사용자 로그
-    # 어떻게 읽을 거지? 
-    # 1. 사용자 내용 요약 
-    # 2. (전체 내용) 사용자의 질의와 답변
     search_file = None
     for file_path in sorted(glob(f"{AI_CONVERSATION_DIR}/*"), reverse=True):
         with open(file_path, "r") as file:
@@ -50,9 +46,10 @@ def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
         return None
     print(search_file)
     text = read_text(search_file)
+    lang = iso_639_lang.to_full_lang(userinfo.lang)
     splitted_script, full_script = refine_script(text.split('\n'))
     
-    summary = summary_chatbot.exec(splitted_script['customer'], None)
+    summary = summary_chatbot.exec(f'You need to wrap up sentences in {lang}. do your work with followed senetences {splitted_script['customer']}', None)
     data = {'summary': summary, 'full_script': full_script}
     pprint(data)
     logging.debug(data)
