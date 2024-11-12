@@ -45,7 +45,7 @@ def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
                 search_file = file_path
                 break
             except IndexError as e:
-                logging.error('invalid log: ' + e)
+                logging.error(e)
                 os.remove(file_path)
                 continue
     if search_file == None:
