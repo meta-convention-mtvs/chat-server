@@ -14,20 +14,13 @@ async def hello():
 
 @app.post("/summary")
 async def summary(userinfo:BuyerAIConversationSummaryRequest) -> dict:
-    try:
-        result = exec_summary(userinfo)
-        if not result:
-            raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="유저가 해당 기업의 AI직원과 대화한 기록을 찾을 수 없음",
-        )
-        return result 
-    except Exception as e:
-        logging.error(e)
+    result = exec_summary(userinfo)
+    if not result:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="요약 중 에러 발생",
-        )
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="유저가 해당 기업의 AI직원과 대화한 기록을 찾을 수 없음",
+    )
+    return result 
         
 
 if __name__ == "__main__":
