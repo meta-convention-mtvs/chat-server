@@ -99,7 +99,7 @@ class ChatBotManager:
             self._initialized = True  # 초기화 완료 플래그 설정
 
     def _load_config(self, config_file):
-        with open(config_file, 'r') as file:
+        with open(config_file, 'r', encoding='utf-8') as file:
             config = json.load(file)
             for key, params in config.items():
                 self._chatbots[key] = CustomChatBot(**params)
