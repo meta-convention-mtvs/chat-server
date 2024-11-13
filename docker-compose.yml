@@ -45,6 +45,18 @@ services:
       - all
       - summary
 
+  web:
+    build: web
+    restart: always
+    env_file: .env
+    volumes:
+      - ./web:/app/srcs
+      - ./logs:/logs
+    command: [ "uvicorn", "main:app", "--reload", "--host=0.0.0.0", "--port=3000" ]
+    profiles:
+      - all
+      - web
+
   nginx:
     image: nginx:latest
     restart: always
@@ -60,3 +72,4 @@ services:
       - all
       - chat
       - summary
+      - web
