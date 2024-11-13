@@ -60,12 +60,17 @@ def make_faiss_index(company_keyword_path:str, whole_companyinfo_path:str) -> No
             convert_to_tensor=True  # GPU에서 PyTorch 텐서로 변환
         )
         
+        # 코사인 유사도를 위해 벡터 정규화
+        company_embedding = company_embedding.float()
+        company_embedding = company_embedding / company_embedding.norm(dim=0, keepdim=True)
+        company_embedding_list = company_embedding.tolist()
+        
         # cpu 사용시
         # company_embedding_cpu = company_embedding.cpu()
         # company_embedding_list = company_embedding_cpu.tolist()
         
         # gpu 사용시
-        company_embedding_list = company_embedding.tolist()
+        # company_embedding_list = company_embedding.tolist()
         
         embeddings.append(company_embedding_list)
         metadata.append(company_whole[company['company_name']])
@@ -74,12 +79,15 @@ def make_faiss_index(company_keyword_path:str, whole_companyinfo_path:str) -> No
 
     # Faiss 인덱스 생성 및 임베딩 추가
     dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
+
+    index = faiss.IndexFlatIP(dimension)  # 내적을 사용하여 코사인 유사도 계산
+    # index = faiss.IndexFlatL2(dimension) # 거리 기반
+
     index.add(embeddings)
     
     # 인덱스를 파일로 저장
-    faiss.write_index(index, f'{DATA_DIR}/company2.index')
-    save_to_json(f'{DATA_DIR}/company_metadata2.json', metadata)
+    faiss.write_index(index, f'{DATA_DIR}/company_cosign.index')
+    save_to_json(f'{DATA_DIR}/company_metadata.json', metadata)
 
 # torch.cuda.empty_cache()
 # make_keywords(f'{DATA_DIR}/3.unique_merged_data.json', f'{DATA_DIR}/4.company_keyword.json')
