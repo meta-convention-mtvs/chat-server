@@ -55,7 +55,11 @@ def exec_summary(userinfo:'BuyerAIConversationSummaryRequest') -> dict:
     lang = iso_639_lang.to_full_lang(userinfo.lang)
     splitted_script, full_script = refine_script(text.split('\n'))
     
-    summary = summary_chatbot.exec(f'You need to wrap up sentences in {lang}. do your work with followed senetences {splitted_script['customer']}', None)
+    customer_script = splitted_script['customer']
+    if customer_script:
+        summary = summary_chatbot.exec(f'You need to wrap up sentences in {lang}. do your work with followed senetences {customer_script}', None)
+    else:
+        summary = '유효한 대화 내용이 없습니다' 
     data = {'summary': summary, 'full_script': full_script}
     pprint(data)
     logging.debug(data)
