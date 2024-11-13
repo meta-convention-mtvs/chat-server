@@ -92,6 +92,7 @@ class Room:
     async def join(self, user: 'User'):
         self.users.append(user)
         user.set_observer(self)
+        print(f"{user.id}: room.join ({self.uuid})", flush=True)
         await user.send_join(self.uuid, self.users)
         self.langs = list(set([user.lang for user in self.users]))
         if len(self.users) > 1 and self.realtime.is_usable() == False and len(self.langs) > 1:
@@ -139,6 +140,7 @@ class Room:
             if len(self.users) == 0:
                 await self.manager.destroy_room(self)
         elif type == "room.leave":
+            print(f"{user.id}: room.leave", flush=True)
             await user.send_bye()
             await user.conn.disconnect()
         elif type == "conversation.request_speech":
@@ -146,6 +148,7 @@ class Room:
                 self.speech = user
                 self.order += 1
                 trans = self.langs[0] if self.speech.lang != self.langs[0] else self.langs[1]
+                print(f"{user.id}: conversation.request_speech {self.order}", flush=True)
                 await self.broadcast_approve(self.order, self.speech, "" if trans is None else trans)
             else:
                 await user.send_error(ERR_FAIL_APPROVE_SPEECH)
@@ -163,6 +166,7 @@ class Room:
                 logging.debug("conversation.buffer.add_audio - no realtime")
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
+            print(f"{user.id}: conversation.buffer.add_audio", flush=True)
             await self.realtime.send({
                 "type": "input_audio_buffer.append",
                 "audio": audio
@@ -175,6 +179,7 @@ class Room:
             if self.realtime.is_usable() == False:
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
+            print(f"{user.id}: conversation.buffer.clear_audio", flush=True)
             await self.ready.send({
                 "type": "input_audio_buffer.clear"
             })
@@ -186,6 +191,7 @@ class Room:
             if self.realtime.is_usable() == False:
                 await user.send_error(ERR_FAIL_SPEECH)
                 return
+            print(f"{user.id}: conversation.done_speech", flush=True)
             await self.realtime.send({
                 "type": "input_audio_buffer.commit"
             })
