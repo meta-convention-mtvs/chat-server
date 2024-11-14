@@ -207,7 +207,8 @@ class Room:
         await self.realtime.disconnect()
 
     async def broadcast(self, json_data: dict):
-        await asyncio.gather(*[user.send(json_data) for user in self.users], return_exceptions=True)
+        res = await asyncio.gather(*[user.send(json_data) for user in self.users], return_exceptions=True)
+        print(f"broadcast result: {res}")
 
     async def broadcast_approve(self, order, user: 'User', trans):
         await self.broadcast({
