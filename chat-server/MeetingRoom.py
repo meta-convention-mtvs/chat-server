@@ -126,8 +126,12 @@ class Room:
             await self.broadcast_audio_delta(self.order, json_data.get("delta", ""))
         elif type == "response.audio.done":
             await self.broadcast_audio_done(self.order)
+        elif type == "conversation.item.input_audio_transcription.failed":
+            print("STT 실패", flush=True)
+            await self.broadcast_input_audio_transcription_failed(self.order)
         elif type == "conversation.item.input_audio_transcription.completed":
             print(json_data.get("transcript", ""), flush=True)
+            await self.broadcast_input_audio_transcription_done(self.order, json_data.get("transcript", ""))
 
     async def onmessage(self, user: 'User', message):
         type = message.get("type", "")
@@ -252,6 +256,19 @@ class Room:
         await self.broadcast({
             "type": "conversation.audio.done",
             "order": order,
+        })
+
+    async def broadcast_input_audio_transcription_failed(self, order):
+        await self.broadcast({
+            "type": "conversation.input_audio.failed",
+            "order": order,
+        })
+
+    async def broadcast_input_audio_transcription_done(self, order, text):
+        await self.broadcast({
+            "type": "conversation.input_audio.done",
+            "order": order,
+            "text": text,
         })
 
 class User:
