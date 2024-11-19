@@ -18,6 +18,9 @@ class CustomChatBot():
         assert kind_of_model in valid_models, f'모델의 종류는 {valid_models} 중 선택하세요'
         
         self.model_name = model_name
+        self.history = history
+        self.prompt_concept = prompt_concept
+        self.detail_prompt = detail_prompt
         
         # 1. 모델 생성
         if kind_of_model == 'llama3.1':
@@ -25,14 +28,33 @@ class CustomChatBot():
         elif kind_of_model in {'gpt-4o-mini', 'gpt-4o'}:
             self.model = ChatOpenAI(model=kind_of_model, temperature=temperature)
 
+        self.set_system_prompt(detail_prompt)
+       
+    
+    def _get_session_history(self, session_id: str) -> ChatMessageHistory:
+        if session_id not in HISTORY_STORAGE:
+            HISTORY_STORAGE[session_id] = {}
+        if self.model_name not in HISTORY_STORAGE[session_id]:
+            HISTORY_STORAGE[session_id][self.model_name] = ChatMessageHistory()
+        return HISTORY_STORAGE[session_id][self.model_name]
+    
+
+    def _get_available_params(self) -> tuple:
+        if isinstance(self.chat_chain, RunnableWithMessageHistory):
+            return {'question': ''}, {'configurable': {"session_id": ''}}
+        return {'question': ''}, None
+    
+    
+    def set_system_prompt(self, data:str) -> None:
+        self.detail_prompt = data
         
-        # 내용을 저장하는 경우
-        if history:
+         # 내용을 저장하는 경우
+        if self.history:
             # 2. 프롬프트 만들기
             self.chat_prompt = ChatPromptTemplate.from_messages(
                 [
-                    SystemMessagePromptTemplate.from_template(f'당신은 {prompt_concept} 에 대한 전문가입니다. \
-                                                                {prompt_concept}에 대해서만 답변합니다. {detail_prompt}'),
+                    SystemMessagePromptTemplate.from_template(f'당신은 {self.prompt_concept} 에 대한 전문가입니다. \
+                                                                {self.prompt_concept}에 대해서만 답변합니다. {self.detail_prompt}'),
                     HumanMessagePromptTemplate.from_template('{question}'),
                     MessagesPlaceholder(variable_name='history')
                 ]
@@ -50,27 +72,14 @@ class CustomChatBot():
             # 2. 프롬프트 만들기
             self.chat_prompt = ChatPromptTemplate.from_messages(
                 [
-                    SystemMessagePromptTemplate.from_template(f'당신은 {prompt_concept} 에 대한 전문가입니다. \
-                                                                {prompt_concept}에 대해서만 답변합니다. {detail_prompt}'),
+                    SystemMessagePromptTemplate.from_template(f'당신은 {self.prompt_concept} 에 대한 전문가입니다. \
+                                                                {self.prompt_concept}에 대해서만 답변합니다. {self.detail_prompt}'),
                     HumanMessagePromptTemplate.from_template('{question}'),
                 ]
             )
             # 3. 모델+프롬프트 연결 체인 만들기
             self.chat_chain = self.chat_prompt | self.model
-     
-    
-    def _get_session_history(self, session_id: str) -> ChatMessageHistory:
-        if session_id not in HISTORY_STORAGE:
-            HISTORY_STORAGE[session_id] = {}
-        if self.model_name not in HISTORY_STORAGE[session_id]:
-            HISTORY_STORAGE[session_id][self.model_name] = ChatMessageHistory()
-        return HISTORY_STORAGE[session_id][self.model_name]
-    
-
-    def _get_available_params(self) -> tuple:
-        if isinstance(self.chat_chain, RunnableWithMessageHistory):
-            return {'question': ''}, {'configurable': {"session_id": ''}}
-        return {'question': ''}, None
+            
     
     def exec(self, chat:str, user_id:str) -> str:
         param, config = self._get_available_params()
@@ -99,7 +108,7 @@ class ChatBotManager:
             self._initialized = True  # 초기화 완료 플래그 설정
 
     def _load_config(self, config_file):
-        with open(config_file, 'r') as file:
+        with open(config_file, 'r', encoding='utf-8') as file:
             config = json.load(file)
             for key, params in config.items():
                 self._chatbots[key] = CustomChatBot(**params)
