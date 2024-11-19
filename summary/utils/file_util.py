@@ -46,5 +46,20 @@ def read_text(path:str) -> str:
     except Exception as e:
         logging.error("file read failed: " + path)
         logging.error(e)
+        
+        
+def get_json_from_str(data:str) -> dict:
+    '''
+    ```json
+    ``` 형태에서 json 뽑아내기
+    '''
+    json_start = data.find('{') 
+    json_end = data.rfind('}') + 1 
+    try:
+        return json.loads(data[json_start:json_end])
+    except Exception as e:
+        logging.error(e)
+        return None
+
 
     

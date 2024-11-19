@@ -35,3 +35,17 @@ def load_json_data(path:str) -> Any:
         logging.error("load failed: " + path)
         logging.error(e)
     return json_data
+
+
+def get_json_from_str(data:str) -> dict:
+    '''
+    ```json
+    ``` 형태에서 json 뽑아내기
+    '''
+    json_start = data.find('{') 
+    json_end = data.rfind('}') + 1 
+    try:
+        return json.loads(data[json_start:json_end])
+    except Exception as e:
+        logging.error(e)
+        return None
