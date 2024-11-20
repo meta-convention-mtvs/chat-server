@@ -3,9 +3,11 @@ from uuid import uuid4
 from EventHandler import EventHandler
 from RealtimeClient import RealtimeClient
 from fastapi import WebSocket
-from prompt import translation
+from prompt import translation, meeting_instruction
 import logging
 import iso_639_lang
+from openai import OpenAI
+import firestore
 
 ERR_FATAL = 1
 ERR_FAIL_CREATE_ROOM = 2
@@ -32,12 +34,13 @@ class Manager:
             lang = message.get("lang", None)
             userid = message.get("userid", None)
             roomid = message.get("roomid", None)
+            orgid = message.get("orgid", None)
             if lang is None or userid is None:
                 await user.send_error(ERR_FAIL_CREATE_ROOM)
                 return
             user.id = userid
             user.lang = lang
-            new_room = self.create_room(roomid)
+            new_room = self.create_room(roomid, orgid)
             if new_room is None:
                 await user.send_error(ERR_FAIL_CREATE_ROOM)
                 return
@@ -60,8 +63,8 @@ class Manager:
             await user.send_error(ERR_FATAL)
             return
     
-    def create_room(self, roomid = None) -> 'Room':
-        new_room = Room(self, roomid)
+    def create_room(self, roomid = None, orgid = None) -> 'Room':
+        new_room = Room(self, roomid, orgid=orgid)
         for room in self.rooms:
             if room.uuid == new_room.uuid:
                 return None
@@ -69,14 +72,15 @@ class Manager:
         return new_room
 
     async def destroy_room(self, room: 'Room'):
-        self.rooms.remove(room)
+        if room in self.rooms:
+            self.rooms.remove(room)
         await room.free()
 
     async def broadcast(self, conns: list['Connection'], json_data: dict):
         await asyncio.gather(*[conn.send(json_data) for conn in conns], return_exceptions=True)
 
 class Room:
-    def __init__(self, manager: Manager, id = None):
+    def __init__(self, manager: Manager, id = None, orgid = None):
         self.realtime = RealtimeClient()
         self.realtime.on("*", self.onrealtime)
         self.manager = manager
@@ -88,6 +92,8 @@ class Room:
         self.order = 0
         self.speech = None
         self.langs = []
+        self.orgid = orgid
+        self.client = OpenAI()
 
     async def join(self, user: 'User'):
         self.users.append(user)
@@ -100,6 +106,9 @@ class Room:
             lang1 = iso_639_lang.to_full_lang(self.langs[0])
             lang2 = iso_639_lang.to_full_lang(self.langs[1])
             instructions = translation.CONTENT.format(lang1=lang1, lang2=lang2)
+            items = " ".join([f'"{item}"' for item in self.get_proper_noun(self.orgid)])
+            instructions += "\n\nThe following proper nouns must be written and pronounced exactly as they are in the original text.\n" + items
+            print(instructions, flush=True)
             await self.realtime.send({
                 "type": "session.update",
                 "session": {
@@ -109,6 +118,29 @@ class Room:
             })
             self.ready = True
         await self.broadcast_update()
+
+    def get_proper_noun(self, org_id):
+        if org_id is None:
+            print(f"WARNING: org id is None. org_id: {org_id}", flush=True)
+            return []
+        org_info = firestore.load_org_info(org_id)
+        if org_info is None:
+            print(f"WARNING: org data is None. org_id: {org_id}", flush=True)
+            return []
+        try:
+            completion = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": meeting_instruction.CONTENT},
+                    {"role": "user", "content": org_info},
+                ])
+            contents_text: str = completion.choices[0].message.content
+            print(f"org noun: {contents_text}", flush=True)
+            contents = contents_text.split("\n")
+            return contents
+        except:
+            print("error org noun", flush=True)
+            return []
 
     async def onrealtime(self, json_data):
         type = json_data.get("type", "")
