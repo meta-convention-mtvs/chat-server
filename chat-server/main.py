@@ -26,7 +26,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/chat/test")
 async def root():
-    with open("test.html", "r") as file:
+    with open("test_chat.html", "r") as file:
         return HTMLResponse(file.read())
 
 meeting_manager = MeetingRoomManager()
@@ -37,7 +37,7 @@ async def translation_endpoint(websocket: WebSocket):
 
 @app.get("/translation/test")
 async def translation_test():
-    with open("translation_test.html", "r") as file:
+    with open("test_translation.html", "r") as file:
         return HTMLResponse(file.read())
 
 if __name__ == "__main__":
