@@ -107,7 +107,7 @@ class Room:
             lang2 = iso_639_lang.to_full_lang(self.langs[1])
             instructions = translation.CONTENT.format(lang1=lang1, lang2=lang2)
             items = " ".join([f'"{item}"' for item in self.get_proper_noun(self.orgid)])
-            instructions += "\n\nThe following proper nouns must be written and pronounced exactly as they are in the original text.\n" + items
+            instructions += "\n\nPlease do not translate the following proper nouns, just say them as they are.\n" + items
             print(instructions, flush=True)
             await self.realtime.send({
                 "type": "session.update",
