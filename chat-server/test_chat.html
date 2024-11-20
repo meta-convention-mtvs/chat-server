@@ -31,6 +31,15 @@
             sampleRate: 24000,
             flushingTime: 2000
         });
+        function play(delta) {
+            const binary = atob(delta);
+            const bytes = new Uint16Array(binary.length / 2);
+            for (let i = 0; i < binary.length / 2; i++) {
+                bytes[i] = (binary.charCodeAt(i * 2) & 0xff) + ((binary.charCodeAt(i * 2 + 1) & 0xff) << 8);
+            }
+            player.feed(bytes)
+        }
+
         var ws = new WebSocket("ws://" + location.host + "/chat");
         function appendText(text) {
             var messages = document.getElementById('messages')
@@ -43,13 +52,7 @@
         ws.onmessage = e => {
             const res = JSON.parse(e.data);
             if (res.type == "generated.audio.delta") {
-                const delta = res.delta;
-                const binary = atob(delta);
-                const bytes = new Uint16Array(binary.length / 2);
-                for (let i = 0; i < binary.length / 2; i++) {
-                    bytes[i] = (binary.charCodeAt(i * 2) & 0xff) + ((binary.charCodeAt(i * 2 + 1) & 0xff) << 8);
-                }
-                player.feed(bytes)
+                play(res.delta)
             }
             appendText("receive: " + e.data);
         }

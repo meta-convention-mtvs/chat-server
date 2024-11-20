@@ -25,6 +25,7 @@ class LLMConsole:
         self.modalities = None
         self.uuid = str(uuid4())
         self.log_file = None
+        self.audio_file = None
     
     async def load(self):
         self.log_file = open(LOG_DIR + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
@@ -57,7 +58,10 @@ class LLMConsole:
     async def add_audio(self, buffer):
         if not buffer:
             return
+        if self.use_audio == False: # if start recording voice
+            self.audio_file = open(LOG_DIR + "/voice_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
         self.use_audio = True
+        self.audio_file.write(buffer)
         await self.ai.send(json.dumps({
             "type": "input_audio_buffer.append",
             "audio": buffer
@@ -65,6 +69,8 @@ class LLMConsole:
     
     async def clear_audio(self):
         self.use_audio = False
+        if self.audio_file is not None:
+            self.audio_file.close()
         await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
     async def add_text(self, role, text, type="input_text", log_label="text"):
@@ -96,6 +102,8 @@ class LLMConsole:
         self.status = LLMConsole.STATUS_RUN
         if self.use_audio:
             self.use_audio = False
+            if self.audio_file is not None:
+                self.audio_file.close()
             await self.ai.send(json.dumps({ "type": "input_audio_buffer.commit" }))
         await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": self.modalities} }))
 
