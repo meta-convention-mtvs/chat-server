@@ -16,7 +16,6 @@ app = FastAPI(lifespan=load_firestore)
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     llm = LLMConsole(websocket)
-    await llm.load()
     try:
         while True:
             message = await websocket.receive_json()
