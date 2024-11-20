@@ -64,7 +64,13 @@ class LLMConsole:
         org_info = firestore.load_org_info(org_uuid=org_id)
         user_lang = iso_639_lang.to_full_lang(lang_code)
         f = footer.CONTENT.format(user_lang)
-        return f"{header}\n{org_info}\n{user_lang}\n{f}"
+        return f"""{header}
+
+COMPANY INFORMATION:
+{org_info}
+
+User Response Guidelines:
+{f}"""
     
     async def add_audio(self, buffer):
         if not buffer:
