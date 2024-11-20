@@ -2,7 +2,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 import uvicorn
 import dotenv
-from RealtimeAPI import LLMConsole
+from Consultant import LLMConsole
 from chatting_command import command
 from MeetingRoom import Manager as MeetingRoomManager
 from config import log
