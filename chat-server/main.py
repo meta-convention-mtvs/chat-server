@@ -6,10 +6,11 @@ from Consultant import LLMConsole
 from chatting_command import command
 from MeetingRoom import Manager as MeetingRoomManager
 from config import log
+from firestore import load_firestore
 
 dotenv.load_dotenv()
 
-app = FastAPI()
+app = FastAPI(lifespan=load_firestore)
 
 @app.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):

@@ -9,6 +9,7 @@ import re
 from prompt import instruction, footer
 from sample import org_rockhead_martin
 import iso_639_lang
+import firestore
 
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 LOG_DIR = "/conversation"
@@ -48,12 +49,10 @@ class LLMConsole:
             }
         }))
         lang = iso_639_lang.to_full_lang(lang_code)
-        await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
+        org_info = firestore.load_org_info(org_uuid=org_id)
+        await self.add_text("user", org_info, "input_text", log_label="prompt")
         await self.add_text("user", footer.CONTENT.format(lang), "input_text", log_label="prompt")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
-    
-    async def load_org_info(self, org_id):
-        return org_rockhead_martin.CONTENT
     
     async def add_audio(self, buffer):
         if not buffer:
