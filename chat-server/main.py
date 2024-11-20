@@ -2,14 +2,15 @@ from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 import uvicorn
 import dotenv
-from RealtimeAPI import LLMConsole
+from Consultant import LLMConsole
 from chatting_command import command
 from MeetingRoom import Manager as MeetingRoomManager
 from config import log
+from firestore import load_firestore
 
 dotenv.load_dotenv()
 
-app = FastAPI()
+app = FastAPI(lifespan=load_firestore)
 
 @app.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
@@ -26,7 +27,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/chat/test")
 async def root():
-    with open("test.html", "r") as file:
+    with open("test_chat.html", "r") as file:
         return HTMLResponse(file.read())
 
 meeting_manager = MeetingRoomManager()
@@ -37,7 +38,7 @@ async def translation_endpoint(websocket: WebSocket):
 
 @app.get("/translation/test")
 async def translation_test():
-    with open("translation_test.html", "r") as file:
+    with open("test_translation.html", "r") as file:
         return HTMLResponse(file.read())
 
 if __name__ == "__main__":

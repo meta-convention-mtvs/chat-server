@@ -9,6 +9,7 @@ import re
 from prompt import instruction, footer
 from sample import org_rockhead_martin
 import iso_639_lang
+import firestore
 
 ERROR_REQ_PARAM = {"type": "server.error", "code": 4}
 LOG_DIR = "/conversation"
@@ -25,6 +26,7 @@ class LLMConsole:
         self.modalities = None
         self.uuid = str(uuid4())
         self.log_file = None
+        self.audio_file = None
     
     async def load(self):
         self.log_file = open(LOG_DIR + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
@@ -47,17 +49,18 @@ class LLMConsole:
             }
         }))
         lang = iso_639_lang.to_full_lang(lang_code)
-        await self.add_text("user", await self.load_org_info(org_id), "input_text", log_label="prompt")
+        org_info = firestore.load_org_info(org_uuid=org_id)
+        await self.add_text("user", org_info, "input_text", log_label="prompt")
         await self.add_text("user", footer.CONTENT.format(lang), "input_text", log_label="prompt")
         # await self.add_text("system", SAMPLE_INFO, "input_text")
-    
-    async def load_org_info(self, org_id):
-        return org_rockhead_martin.CONTENT
     
     async def add_audio(self, buffer):
         if not buffer:
             return
+        if self.use_audio == False: # if start recording voice
+            self.audio_file = open(LOG_DIR + "/voice_" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
         self.use_audio = True
+        self.audio_file.write(buffer)
         await self.ai.send(json.dumps({
             "type": "input_audio_buffer.append",
             "audio": buffer
@@ -65,6 +68,8 @@ class LLMConsole:
     
     async def clear_audio(self):
         self.use_audio = False
+        if self.audio_file is not None:
+            self.audio_file.close()
         await self.ai.send(json.dumps({ "type": "input_audio_buffer.clear" }))
     
     async def add_text(self, role, text, type="input_text", log_label="text"):
@@ -96,6 +101,8 @@ class LLMConsole:
         self.status = LLMConsole.STATUS_RUN
         if self.use_audio:
             self.use_audio = False
+            if self.audio_file is not None:
+                self.audio_file.close()
             await self.ai.send(json.dumps({ "type": "input_audio_buffer.commit" }))
         await self.ai.send(json.dumps({ "type": "response.create", "response": {"modalities": self.modalities} }))
 
