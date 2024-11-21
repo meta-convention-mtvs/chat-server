@@ -8,7 +8,6 @@ from pprint import pprint
 import json
 import logging
 
-
 chatbot_manager = ChatBotManager(CHATBOT_CONFIG)
 embedding_model = EmbeddingModel().get_model()
 data_refinement_bot = chatbot_manager.get_chatbot('data_refinement')
@@ -65,7 +64,7 @@ tags = {'3D Printing',
  'Video'}
 
 def make_company_data_for_recommendation(data:str) -> None:
-    loaded_data = load_json_data(f'{CONFIG_DIR}/company_data_form.json')
+    loaded_data = load_json_data(f'{CONFIG_DIR}/company_data_sample.json')
     company_data = data_refinement_bot.exec(f"input1: {data} // input2: {loaded_data}", None)
     company_data = get_json_from_str(company_data)
     if 'tags' in company_data:
