@@ -21,15 +21,16 @@ class LLMConsole:
     
     def __init__(self, ws: WebSocket):
         self.ws = ws
+        self.ai = None
         self.status = LLMConsole.STATUS_WAIT
         self.use_audio = False
         self.modalities = None
         self.uuid = str(uuid4())
-        self.log_file = None
+        self.log_file = open(LOG_DIR + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
         self.audio_file = None
+        self.listen_task = None
     
     async def load(self):
-        self.log_file = open(LOG_DIR + "/" + datetime.now().strftime("%Y%m%d_%H%M%S") + "_" + self.uuid + ".txt", "+w")
         url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"
         headers = {
             "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
@@ -37,22 +38,45 @@ class LLMConsole:
         }
         self.ai = await websockets.connect(url, extra_headers=headers)
         loop = asyncio.get_event_loop()
-        loop.create_task(self.onmessage())
+        self.listen_task = loop.create_task(self.onmessage())
+    
+    def unload(self):
+        if self.ai is not None:
+            self.ai.close()
+        if self.listen_task is not None:
+            self.listen_task.cancel()
     
     async def set_org(self, user_id, lang_code, org_id):
+        self.unload()
         self.log(f"*** {user_id} {lang_code} {org_id}")
+        instructions = await self.create_instruction(org_id, lang_code)
+        await self.load()
         await self.ai.send(json.dumps({
             "type": "session.update",
             "session": { 
-                "instructions": instruction.CONTENT,
-                "input_audio_transcription": { "model": "whisper-1" }
+                "instructions": instructions,
+                "input_audio_transcription": { "model": "whisper-1" },
+                "turn_detection": None,
+                # "voice": "ash", # 낮은 남성 목소리
+                "voice": "ballad", # 높은 남성 목소리
+                # "voice": "coral", # 허스키 여성 목소리
+                # "voice": "sage", # 가느다란 여성 목소리
+                # "voice": "verse", # 허스키 남성 목소리
             }
         }))
-        lang = iso_639_lang.to_full_lang(lang_code)
+
+    async def create_instruction(self, org_id, lang_code):
+        header = instruction.CONTENT
         org_info = firestore.load_org_info(org_uuid=org_id)
-        await self.add_text("user", org_info, "input_text", log_label="prompt")
-        await self.add_text("user", footer.CONTENT.format(lang), "input_text", log_label="prompt")
-        # await self.add_text("system", SAMPLE_INFO, "input_text")
+        user_lang = iso_639_lang.to_full_lang(lang_code)
+        f = footer.CONTENT.format(user_lang)
+        return f"""{header}
+
+COMPANY INFORMATION:
+{org_info}
+
+User Response Guidelines:
+{f}"""
     
     async def add_audio(self, buffer):
         if not buffer:

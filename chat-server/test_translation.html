@@ -19,20 +19,99 @@
         </select>
         <div>
             <textarea type="text" id="messageText"
-                autocomplete="off">{"lang": "ko", "userid": "abcd", "roomid": "qwer"}</textarea>
+                autocomplete="off">{"lang": "ko", "userid": "abcd", "roomid": "qwer", "orgid": "998cdb3f-0959-44b5-aa27-5ecbdbcc316e"}</textarea>
         </div>
         <button>Send</button>
     </form>
+    <button id="recording">녹음</button>
+    <textarea readonly id="record-text"></textarea>
     <ul id='messages'>
     </ul>
     <script src="https://unpkg.com/pcm-player"></script>
     <script>
-        var player = new PCMPlayer({
-            inputCodec: 'Int16',
-            channels: 1,
-            sampleRate: 24000,
-            flushingTime: 2000
-        });
+
+        let audioContext, audioWorkletNode, mediaStream;
+
+        async function initRecording() {
+            if (audioContext == null) {
+                audioContext = new AudioContext({ sampleRate: 24000 });
+                await audioContext.audioWorklet.addModule('/chat/static/recorder-worklet-processor.js');
+                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const source = audioContext.createMediaStreamSource(mediaStream);
+                audioWorkletNode = new AudioWorkletNode(audioContext, 'recorder-worklet-processor');
+                source.connect(audioWorkletNode);
+                audioWorkletNode.connect(audioContext.destination);
+                audioWorkletNode.port.onmessage = (event) => {
+                    downloadWAV(event.data.wavBuffer)
+                    const arr = new Uint8Array(event.data.wavBuffer)
+                    base64Audio = uint8ArrayToBase64(arr);
+                    document.getElementById("record-text").innerText = base64Audio;
+
+                    const payload = JSON.stringify({
+                        "type": "conversation.buffer.add_audio",
+                        "audio": base64Audio,
+                    })
+                    ws.send(payload);
+                    appendText("send: " + payload)
+                    const payload2 = JSON.stringify({
+                        "type": "conversation.done_speech",
+                    })
+                    ws.send(payload2);
+                    appendText("send: " + payload2)
+                    document.querySelector("#request").value = "conversation.request_speech";
+                    document.getElementById("messageText").value = '{}';
+                };
+            }
+        }
+
+        async function startRecording() {
+            if (audioWorkletNode) {
+                audioWorkletNode.port.postMessage('clear');
+                const payload = JSON.stringify({
+                    "type": "conversation.request_speech",
+                })
+                ws.send(payload);
+                appendText("send: " + payload)
+            }
+        }
+        function uint8ArrayToBase64(uint8Array) {
+            const chunkSize = 4800;
+            let base64 = '';
+
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                const chunk = uint8Array.slice(i, i + chunkSize);
+                base64 += btoa(String.fromCharCode.apply(null, chunk));
+            }
+
+            return base64;
+        }
+        async function stopRecording() {
+            if (audioWorkletNode) {
+                audioWorkletNode.port.postMessage('flush');
+            }
+        }
+        document.getElementById('recording').addEventListener('mousedown', startRecording);
+        document.getElementById('recording').addEventListener('mouseup', stopRecording);
+
+        function downloadWAV(buffer) {
+            const wavBlob = new Blob([buffer], { type: 'audio/wav' });
+            const downloadLink = document.createElement('a');
+            downloadLink.href = URL.createObjectURL(wavBlob);
+            downloadLink.download = `recording_${new Date().toISOString()}.wav`;
+
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+
+            setTimeout(() => {
+                document.body.removeChild(downloadLink);
+                URL.revokeObjectURL(downloadLink.href);
+            }, 100);
+        }
+
+
+
+
+        var player = null
         var ws = new WebSocket("ws://" + location.host + "/translation");
         function appendText(text) {
             var messages = document.getElementById('messages')
@@ -56,6 +135,16 @@
             appendText("receive: " + e.data);
         }
         function sendMessage(event) {
+            if (player == null) {
+                player = new PCMPlayer({
+                    inputCodec: 'Int16',
+                    channels: 1,
+                    sampleRate: 24000,
+                    flushingTime: 2000
+                });
+            }
+
+            initRecording();
             var input = document.getElementById("messageText")
             try {
                 data = JSON.parse(input.value)

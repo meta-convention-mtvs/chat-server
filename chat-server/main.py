@@ -1,5 +1,7 @@
+import uuid
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import dotenv
 from Consultant import LLMConsole
@@ -11,12 +13,12 @@ from firestore import load_firestore
 dotenv.load_dotenv()
 
 app = FastAPI(lifespan=load_firestore)
+app.mount("/chat/static", StaticFiles(directory="static"), name="static")
 
 @app.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     llm = LLMConsole(websocket)
-    await llm.load()
     try:
         while True:
             message = await websocket.receive_json()
@@ -40,6 +42,10 @@ async def translation_endpoint(websocket: WebSocket):
 async def translation_test():
     with open("test_translation.html", "r") as file:
         return HTMLResponse(file.read())
+
+@app.get("/translation/uuid")
+async def create_uuid():
+    return HTMLResponse(str(uuid.uuid4()))
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=True)

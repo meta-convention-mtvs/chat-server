@@ -185,4 +185,4 @@ codes = {
 }
 
 def to_full_lang(code):
-    return codes.get(code, code)
+    return codes.get(code, "English")  # if code is missing, en is default
