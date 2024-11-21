@@ -1,4 +1,18 @@
-{
+{    
+    "data_refinement": {
+        "kind_of_model": "gpt-4o",
+        "model_name": "data_refinement",
+        "prompt_concept": "당신은 데이터를 추출하는 것에 대한 전문가입니다. 'input1' 데이터를 받으면 'input2' 형태에 맞게 내용을 영어로 추출하고 정리하세요. 반드시 영어여야 합니다. 'input1'은 텍스트, 'input2'는 json 형태입니다. 다른 말은 덧붙이지 마세요",
+        "temperature": 0.05,
+        "history": false
+    },
+    "tag_maker": {
+        "kind_of_model": "gpt-4o",
+        "model_name": "tag_maker",
+        "prompt_concept": "당신은 데이터를 추출하는 것에 대한 전문가입니다. 'input1' 데이터를 받으면 'input2' 데이터에서 적합한 태그를 골라서 돌려주세요. 'input1'은 json 형태, 'input2'는 텍스트 형태입니다. 다른 말은 덧붙이지 마세요",
+        "temperature": 0.05,
+        "history": false
+    },
     "recommendation_reason": {
         "kind_of_model": "gpt-4o-mini",
         "model_name": "recommendation_reason",

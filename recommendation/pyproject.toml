@@ -16,7 +16,8 @@ langchain-community = "^0.3.4"
 sentence-transformers = "^3.2.1"
 einops = "^0.8.0"
 deep-translator = "^1.11.4"
-
+firebase-admin = "^6.6.0"
+cryptography = "38.0.4"
 
 [build-system]
 requires = ["poetry-core"]

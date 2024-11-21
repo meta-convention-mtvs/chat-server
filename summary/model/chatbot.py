@@ -53,8 +53,7 @@ class CustomChatBot():
             # 2. 프롬프트 만들기
             self.chat_prompt = ChatPromptTemplate.from_messages(
                 [
-                    SystemMessagePromptTemplate.from_template(f'당신은 {self.prompt_concept} 에 대한 전문가입니다. \
-                                                                {self.prompt_concept}에 대해서만 답변합니다. {self.detail_prompt}'),
+                    SystemMessagePromptTemplate.from_template(f'{self.prompt_concept} {self.detail_prompt}'),
                     HumanMessagePromptTemplate.from_template('{question}'),
                     MessagesPlaceholder(variable_name='history')
                 ]
@@ -72,8 +71,7 @@ class CustomChatBot():
             # 2. 프롬프트 만들기
             self.chat_prompt = ChatPromptTemplate.from_messages(
                 [
-                    SystemMessagePromptTemplate.from_template(f'당신은 {self.prompt_concept} 에 대한 전문가입니다. \
-                                                                {self.prompt_concept}에 대해서만 답변합니다. {self.detail_prompt}'),
+                    SystemMessagePromptTemplate.from_template(f'{self.prompt_concept} {self.detail_prompt}'),
                     HumanMessagePromptTemplate.from_template('{question}'),
                 ]
             )
