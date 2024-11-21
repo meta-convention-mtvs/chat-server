@@ -97,12 +97,7 @@
             }, 100);
         }
 
-        var player = new PCMPlayer({
-            inputCodec: 'Int16',
-            channels: 1,
-            sampleRate: 24000,
-            flushingTime: 2000
-        });
+        var player = null;
         function play(delta) {
             const binary = atob(delta);
             const bytes = new Uint16Array(binary.length / 2);
@@ -129,6 +124,14 @@
             appendText("receive: " + e.data);
         }
         function sendMessage(event) {
+            if (player == null) {
+                player = new PCMPlayer({
+                    inputCodec: 'Int16',
+                    channels: 1,
+                    sampleRate: 24000,
+                    flushingTime: 2000
+                });
+            }
             initRecording();
             var input = document.getElementById("messageText")
             try {

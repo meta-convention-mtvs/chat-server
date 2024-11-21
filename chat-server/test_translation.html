@@ -111,12 +111,7 @@
 
 
 
-        var player = new PCMPlayer({
-            inputCodec: 'Int16',
-            channels: 1,
-            sampleRate: 24000,
-            flushingTime: 2000
-        });
+        var player = null
         var ws = new WebSocket("ws://" + location.host + "/translation");
         function appendText(text) {
             var messages = document.getElementById('messages')
@@ -140,6 +135,15 @@
             appendText("receive: " + e.data);
         }
         function sendMessage(event) {
+            if (player == null) {
+                player = new PCMPlayer({
+                    inputCodec: 'Int16',
+                    channels: 1,
+                    sampleRate: 24000,
+                    flushingTime: 2000
+                });
+            }
+
             initRecording();
             var input = document.getElementById("messageText")
             try {
