@@ -48,4 +48,4 @@ def get_json_from_str(data:str) -> dict:
         return json.loads(data[json_start:json_end])
     except Exception as e:
         logging.error(e)
-        return None
+        return {}
