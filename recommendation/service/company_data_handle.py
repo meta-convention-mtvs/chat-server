@@ -79,6 +79,8 @@ def make_company_data_for_recommendation(data:str) -> None:
 
 
 def save_company_data(data:str) -> None:
+    
+    logging.debug(data)
     # whole company_data
     company_data = make_company_data_for_recommendation(data)
     
