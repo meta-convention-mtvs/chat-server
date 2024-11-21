@@ -114,6 +114,11 @@ class Room:
                 "session": {
                     "instructions": instructions,
                     "input_audio_transcription": { "model": "whisper-1" },
+                    # "voice": "ash", # 낮은 남성 목소리
+                    # "voice": "ballad", # 높은 남성 목소리
+                    # "voice": "coral", # 허스키 여성 목소리
+                    # "voice": "sage", # 가느다란 여성 목소리
+                    # "voice": "verse", # 허스키 남성 목소리
                 }
             })
             self.ready = True
