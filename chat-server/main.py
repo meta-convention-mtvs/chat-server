@@ -1,6 +1,7 @@
 import uuid
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import dotenv
 from Consultant import LLMConsole
@@ -12,6 +13,7 @@ from firestore import load_firestore
 dotenv.load_dotenv()
 
 app = FastAPI(lifespan=load_firestore)
+app.mount("/chat/static", StaticFiles(directory="static"), name="static")
 
 @app.websocket("/")
 async def websocket_endpoint(websocket: WebSocket):
