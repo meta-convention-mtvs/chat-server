@@ -7,6 +7,7 @@ from config.path import CHATBOT_CONFIG, CONFIG_DIR, DATA_DIR
 from pprint import pprint
 import json
 import logging
+import re
 
 chatbot_manager = ChatBotManager(CHATBOT_CONFIG)
 embedding_model = EmbeddingModel().get_model()
@@ -69,8 +70,10 @@ def make_company_data_for_recommendation(data:str) -> None:
     company_data = get_json_from_str(company_data)
     if 'tags' in company_data:
         result = tag_maker_bot.exec(f"input1: {company_data} // input2: {tags}", None)
-        print(result)
-        company_data['tags'] = result.split(', ')
+        logging.debug(result)
+        cleaned_result = re.sub(r"[{}\[\]]", "", result)
+        logging.debug(f'cleaned_result: {cleaned_result}')
+        company_data['tags'] = cleaned_result.split(', ')
     else:
         logging.error(f'invalid extraction with : {data}')
         return None
