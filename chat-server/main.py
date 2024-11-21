@@ -1,3 +1,4 @@
+import uuid
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import HTMLResponse
 import uvicorn
@@ -39,6 +40,10 @@ async def translation_endpoint(websocket: WebSocket):
 async def translation_test():
     with open("test_translation.html", "r") as file:
         return HTMLResponse(file.read())
+
+@app.get("/translation/uuid")
+async def create_uuid():
+    return HTMLResponse(str(uuid.uuid4()))
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=3000, reload=True)
