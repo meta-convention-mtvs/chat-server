@@ -7,48 +7,28 @@ import uvicorn
 import ssl
 from schema.user import UserInfo
 from service.recommendation import exec_recommendation
-from service.company_data_handle import save_company_data
-from model.firebase_client import FirebaseClient
+from lifecycle.firebase_event_listener import run_listener_in_background, cleanup_listener
 from config import log
 import logging
+from model.firebase_client import FirebaseClient
+
 
 # 인증서 관련 오류 방지
 ssl._create_default_https_context = ssl._create_unverified_context
 
 client = FirebaseClient()
 
-def start_listener():
-    # 이벤트 루프 생성 및 실행
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    
-    client.listen_collection()
-    
-    # 무한 루프로 리스너 유지
-    try:
-        loop.run_forever()
-    except Exception as e:
-        logging.error(f"Listener error: {e}")
-    finally:
-        loop.close()
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 스레드 풀 생성
-    executor = ThreadPoolExecutor(max_workers=1)
-    
+    executor = run_listener_in_background()
     try:
-        # 백그라운드 스레드에서 리스너 시작
-        if not client._listener_active:
-            future = executor.submit(start_listener)
         yield
     finally:
-        # 종료 시 정리
-        executor.shutdown(wait=False)
-        if hasattr(client, 'watch'):
-            client.watch.unsubscribe()
-
+        cleanup_listener(executor)
+        
+        
 app = FastAPI(lifespan=lifespan)
+
 
 @app.get("/")
 async def hello():
