@@ -64,7 +64,7 @@ tags = {'3D Printing',
  'Vehicle Tech and Advanced Mobility',
  'Video'}
 
-def make_company_data_for_recommendation(data:str) -> None:
+def make_company_data_for_recommendation(data:str) -> dict:
     loaded_data = load_json_data(f'{CONFIG_DIR}/company_data_form.json')
     company_data = data_refinement_bot.exec(f"input1: {data} // input2: {loaded_data}", None)
     company_data = get_json_from_str(company_data)
@@ -78,11 +78,14 @@ def make_company_data_for_recommendation(data:str) -> None:
     return company_data
 
 
-def save_company_data(data:str) -> None:
+def save_company_data(company_info:str, company_id) -> None:
     
-    logging.debug(data)
+    logging.debug(company_id)
+    logging.debug(company_info)
+
     # whole company_data
-    company_data = make_company_data_for_recommendation(data)
+    company_data = make_company_data_for_recommendation(company_info)
+    company_data['uuid'] = company_id
     
     # company_data with keyword
     company_keywords = make_keywords(company_data, f'{DATA_DIR}/4.company_keyword.json')
