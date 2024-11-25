@@ -87,6 +87,6 @@ class FirebaseClient:
                             .get('ai_training_data', {})
                             .get('trainingData'))
                 if org_info:
-                    save_company_data(org_info)
+                    save_company_data(org_info, doc_id)
                     self.processed_documents.add(doc_id)
                     logging.debug(f"Successfully processed document: {doc_id}")
