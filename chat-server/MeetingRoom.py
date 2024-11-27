@@ -143,7 +143,7 @@ class Room:
             contents_text: str = completion.choices[0].message.content
             print(f"org noun: {contents_text}", flush=True)
             contents = contents_text.split("\n")
-            return contents
+            return contents + ["SPOT"]
         except:
             print("error org noun", flush=True)
             return []
