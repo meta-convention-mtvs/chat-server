@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, status
 import uvicorn
 from schema.user import BuyerAIConversationSummaryRequest
 from config import log
-from service.summary import exec_summary
+from service.summary_ordered_script import exec_summary
 
 
 app = FastAPI()
