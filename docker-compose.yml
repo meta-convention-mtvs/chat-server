@@ -61,3 +61,15 @@ services:
       - all
       - chat
       - summary
+
+  utils:
+    build: utils
+    env_file: .env
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./utils:/app/srcs
+      - ./firebase-key.json:/app/srcs/firebase-key.json
+    command: [ "python", "main.py" ]
+    profiles:
+      - util
