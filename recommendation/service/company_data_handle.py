@@ -67,6 +67,8 @@ tags = {'3D Printing',
 def make_company_data_for_recommendation(data:str) -> dict:
     loaded_data = load_json_data(f'{CONFIG_DIR}/company_data_sample.json')
     company_data = data_refinement_bot.exec(f"input1: {data} // input2: {loaded_data}", None)
+    logging.debug('data refinement: ')
+    logging.debug(company_data)
     company_data = get_json_from_str(company_data)
     if 'tags' in company_data:
         result = tag_maker_bot.exec(f"input1: {company_data} // input2: {tags}", None)
