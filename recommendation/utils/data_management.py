@@ -21,10 +21,16 @@ keyword_chatbot = chatbot_manager.get_chatbot('keyword_extraction')
 3. 2의 아웃풋 값 기준으로 faiss 인덱스 생성
 '''
 
+def get_target_data(company:dict) -> str:
+    target_keys = {'tags', 'company_mission', 'items'}
+    target_values = [company[key] for key in target_keys if key in company]
+    return ' '.join(map(str, target_values))
+    
 
 def make_keywords(company:dict, keyword_file_path:str) -> dict: 
     inner_data = None
-    company_data = keyword_chatbot.exec(f"{company['tags']} {company['company_mission']} {company['items']}에서 핵심 키워드를 추출해줘", None)
+    query = get_target_data(company)
+    company_data = keyword_chatbot.exec(f"{query}에서 핵심 키워드를 추출해줘", None)
     inner_data = {} 
     inner_data['company_name'] = company['company_name']
     inner_data['keywords'] = company_data
