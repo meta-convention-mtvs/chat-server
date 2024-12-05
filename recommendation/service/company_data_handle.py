@@ -1,6 +1,7 @@
 
 from model.chatbot import ChatBotManager
 from model.embedding import EmbeddingModel
+from schema.company import CompanyInsInfoForRecommendation
 from utils.file_util import load_json_data, get_json_from_str
 from utils.data_management import make_keywords, make_faiss_index
 from config.path import CHATBOT_CONFIG, CONFIG_DIR, DATA_DIR
@@ -73,16 +74,18 @@ def make_company_data_for_recommendation(data:str) -> dict:
     if 'tags' in company_data:
         result = tag_maker_bot.exec(f"input1: {company_data} // input2: {tags}", None)
         logging.debug(result)
-        cleaned_result = re.sub(r"[{}\[\]]", "", result)
+        cleaned_result = re.sub(r"[{}\[\]\"']", "", result)
         logging.debug(f'cleaned_result: {cleaned_result}')
         company_data['tags'] = cleaned_result.split(', ')
     else:
         logging.error(f'invalid extraction with : {data}')
         return None
+    logging.debug('whole data: ')
+    logging.debug(company_data)
     return company_data
 
 
-def save_company_data(company_info:str, company_id:str) -> None:
+def save_company_data(company_info:str, company_id:str, whole_data:CompanyInsInfoForRecommendation=None) -> None:
     
     logging.debug(company_id)
     logging.debug(company_info)
@@ -90,8 +93,15 @@ def save_company_data(company_info:str, company_id:str) -> None:
     company_data = make_company_data_for_recommendation(company_info)
     company_data['uuid'] = company_id
     
+    # 기존 코드를 수정하지 않기 위해 이렇게 구현함
+    if whole_data:
+        company_data['company_name'] = whole_data.company_name
+        company_data['category'] = whole_data.category
+        
     # company_data with keyword
     company_keywords = make_keywords(company_data, f'{DATA_DIR}/4.company_keyword.json')
+    logging.debug('company_keywords: ')
+    logging.debug(company_keywords)
     
     # add index
     make_faiss_index(company_keywords, company_data)
