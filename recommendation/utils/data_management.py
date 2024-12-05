@@ -40,10 +40,11 @@ def make_keywords_using_json_list(company_file_path:str, keyword_file_path:str) 
         inner_data = make_keywords(company, keyword_file_path)
         data.append(inner_data)
         pprint(inner_data)
+    return data
     
     
 # faiss 인덱스화
-def make_faiss_index(company_with_keywords:dict, whole_company_info:dict) -> None:    
+def make_faiss_index(company_with_keywords:dict, company_info:dict) -> None:    
     company_embedding = embedding_model.encode(
         company_with_keywords['keywords'],
         task='text-matching',
@@ -60,7 +61,7 @@ def make_faiss_index(company_with_keywords:dict, whole_company_info:dict) -> Non
     loaded_index.add(embeddings)
     
     faiss.write_index(loaded_index, f'{DATA_DIR}/company_cosign.index')
-    append_to_json(f'{DATA_DIR}/company_metadata.json', whole_company_info)
+    append_to_json(f'{DATA_DIR}/company_metadata.json', company_info)
     
     
 
@@ -109,5 +110,5 @@ def make_faiss_index_using_json_list(company_keyword_path:str, whole_companyinfo
     save_to_json(f'{DATA_DIR}/company_metadata.json', metadata)
 
 # torch.cuda.empty_cache()
-# make_keywords(f'{DATA_DIR}/3.unique_merged_data.json', f'{DATA_DIR}/4.company_keyword.json')
-# make_faiss_index(f'{DATA_DIR}/4.company_keyword.json', f'{DATA_DIR}/5.unique_merged_data_with_key.json')
+# make_keywords(f'{DATA_DIR}/refined_data_with_tags.json', f'{DATA_DIR}/4.company_keyword.json')
+# make_faiss_index(f'{DATA_DIR}/4.company_keyword.json', f'{DATA_DIR}/company_metadata.json')
