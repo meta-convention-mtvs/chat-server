@@ -73,12 +73,10 @@ def make_faiss_index(company_with_keywords:dict, company_info:dict) -> None:
 
 
 # faiss 인덱스화 - 전체 다시 할 때
-def make_faiss_index_using_json_list(company_keyword_path:str, whole_companyinfo_path:str) -> None:
+def make_faiss_index_using_json_list(company_keyword_path:str) -> None:
     company_keywords = load_json_data(company_keyword_path)
-    company_whole = load_json_data(whole_companyinfo_path)
 
     embeddings = []
-    metadata = []
     for company in tqdm(company_keywords):
         company_embedding = embedding_model.encode(
             company['keywords'],
@@ -99,7 +97,6 @@ def make_faiss_index_using_json_list(company_keyword_path:str, whole_companyinfo
         # company_embedding_list = company_embedding.tolist()
         
         embeddings.append(company_embedding_list)
-        metadata.append(company_whole[company['company_name']])
     
     embeddings = np.array(embeddings).astype('float32')
 
@@ -113,7 +110,6 @@ def make_faiss_index_using_json_list(company_keyword_path:str, whole_companyinfo
     
     # 인덱스를 파일로 저장
     faiss.write_index(index, f'{DATA_DIR}/company_cosign.index')
-    save_to_json(f'{DATA_DIR}/company_metadata.json', metadata)
 
 # torch.cuda.empty_cache()
 # make_keywords(f'{DATA_DIR}/refined_data_with_tags.json', f'{DATA_DIR}/4.company_keyword.json')

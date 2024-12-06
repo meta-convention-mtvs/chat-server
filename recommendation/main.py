@@ -7,7 +7,7 @@ import uvicorn
 import ssl
 from config.path import DATA_DIR
 from utils.file_util import load_json_data
-from utils.data_management import make_faiss_index, make_keywords, make_keywords_using_json_list
+from utils.data_management import make_faiss_index, make_keywords, make_keywords_using_json_list, make_faiss_index_using_json_list
 from schema.user import UserInfo
 from schema.company import CompanyInsInfoForRecommendation
 from service.recommendation import exec_recommendation
@@ -49,11 +49,16 @@ async def create_recommendation_data(uuid: str, companyinfo: CompanyInsInfoForRe
 @app.post('/data')
 async def data():
     # keyword
-    data = make_keywords_using_json_list(f'{DATA_DIR}/refined_data_with_tags_uuid.json', f'{DATA_DIR}/4.company_keyword.json')
-    whole_company_data = load_json_data(f'{DATA_DIR}/refined_data_with_tags_uuid.json')
-    for index, cur_data in enumerate(data):
-        make_faiss_index(cur_data, whole_company_data[index])
-        print(cur_data)
+    data = make_keywords_using_json_list(f'{DATA_DIR}/company_metadata.json', f'{DATA_DIR}/4.company_keyword.json')
+    
+    # make faiss index - full
+    make_faiss_index_using_json_list(f'{DATA_DIR}/4.company_keyword.json')
+    
+    # add faiss index - part
+    # whole_company_data = load_json_data(f'{DATA_DIR}/company_metadata.json')
+    # for index, cur_data in enumerate(data):
+    #     make_faiss_index(cur_data, whole_company_data[index])
+    #     print(cur_data)
    
     
 if __name__ == "__main__":
