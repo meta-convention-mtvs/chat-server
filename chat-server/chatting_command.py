@@ -14,6 +14,8 @@ async def command(llm, message):
             await llm.ws.send_json(ERROR_REQ_PARAM)
         else:
             await llm.set_org(user_id, lang, org_id)
+            await llm.add_text("user", "Please greet me in the language I speak. You may also mention the name of your company.")
+            await llm.generate(["text", "audio"])
 
     elif message["type"] == "buffer.add_audio":
         audio_data = message.get("audio")
