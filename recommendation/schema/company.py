@@ -9,3 +9,4 @@ class CompanyInsInfoForRecommendation(BaseModel):
     company_name:str
     description:str
     category:str
+    logo_file_name:str
