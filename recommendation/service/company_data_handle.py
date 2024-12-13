@@ -97,6 +97,7 @@ def save_company_data(company_info:str, company_id:str, whole_data:CompanyInsInf
     if whole_data:
         company_data['company_name'] = whole_data.company_name
         company_data['category'] = whole_data.category
+        company_data['logo_file_name'] = whole_data.logo_file_name
         
     # company_data with keyword
     company_keywords = make_keywords(company_data, f'{DATA_DIR}/4.company_keyword.json')
