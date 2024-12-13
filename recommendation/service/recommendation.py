@@ -20,7 +20,7 @@ keyword_chatbot = chatbot_manager.get_chatbot('keyword_extraction')
 recommend_reaason_chatbot = chatbot_manager.get_chatbot('recommendation_reason')
 
 # 추천 시스템
-def recommend(user:str, recommend_num:int=10) -> list[dict]:
+def recommend(user:str, recommend_num:int=12) -> list[dict]:
     try:
         # user_embedding = embedding_model.encode([user], task='text-matching')
         user_embedding = embedding_model.encode([user], task='text-matching', convert_to_tensor=True)
