@@ -62,12 +62,15 @@ def refine_script(text: List[str]) -> Tuple[Dict[str, List[str]], str]:
 
     # 전체 스크립트 생성
     script_lines = []
-    for customer_message, ai_message in zip_longest(customer_messages, ai_messages, fillvalue=None):
-        if customer_message is not None:
-            script_lines.append(f"customer: {customer_message}")
-        if ai_message is not None:
-            script_lines.append(f"AI: {ai_message}")
-    
+    if ai_messages:
+        ai_greeting = ai_messages[0]
+        script_lines.append(f"AI: {ai_greeting}")
+        for customer_message, ai_message in zip_longest(customer_messages, ai_messages[1:], fillvalue=None):
+            if customer_message is not None:
+                script_lines.append(f"customer: {customer_message}")
+            if ai_message is not None:
+                script_lines.append(f"AI: {ai_message}")
+        
 
     return merged, '\n'.join(script_lines)
 
